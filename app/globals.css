@@ -1,0 +1,398 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+
+  --color-ink: #17191e;
+  --color-ink-2: #4b505a;
+  --color-ink-3: #6b707a;
+  --color-line: #e4e6ea;
+  --color-control: #c8ccd2;
+  --color-fog: #f4f5f7;
+  --color-surface: #ffffff;
+  --color-accent: #d1006b;
+  --color-accent-dark: #a80056;
+  --color-accent-glow: rgba(209, 0, 107, 0.35);
+  --color-chart: #2f5d8a;
+  --color-warn-bg: #fff6e0;
+  --color-warn-line: #efd38c;
+  --color-warn-ink: #5c3d00;
+  --color-warn-strong: #8a5a00;
+  --color-ok: #1f7a4d;
+  --color-map: #eceeea;
+
+  --radius-control: 8px;
+  --radius-panel: 12px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-ink-3);
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@utility font-condensed {
+  font-stretch: 75%;
+}
+
+@utility font-poster {
+  font-stretch: 62%;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animaciones de micro-interacciones */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(209, 0, 107, 0.4);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 8px rgba(209, 0, 107, 0);
+  }
+}
+
+@keyframes beaconPing {
+  0% {
+    transform: translate(-50%, 0) scale(0.9);
+    opacity: 0.8;
+  }
+  70%, 100% {
+    transform: translate(-50%, 0) scale(1.4);
+    opacity: 0;
+  }
+}
+
+@utility animate-slide-up {
+  animation: slideUpFade 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@utility animate-pop-in {
+  animation: popIn 0.24s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@utility animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@utility animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}
+
+/* Controles compartidos */
+@layer components {
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--radius-control);
+    background: linear-gradient(135deg, #d1006b 0%, #b8005d 100%);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(209, 0, 107, 0.25);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #e00073 0%, #a80056 100%);
+    box-shadow: 0 4px 14px rgba(209, 0, 107, 0.38);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 1px 3px rgba(209, 0, 107, 0.2);
+  }
+  .btn-primary:disabled {
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+  }
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-control);
+    background: #fff;
+    color: var(--color-ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(23, 25, 30, 0.04);
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-secondary:hover {
+    background: var(--color-fog);
+    border-color: #adb2ba;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(23, 25, 30, 0.08);
+  }
+  .btn-secondary:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .field {
+    height: 44px;
+    width: 100%;
+    padding: 0 12px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-control);
+    background: #fff;
+    font: inherit;
+    font-size: 15px;
+    color: var(--color-ink);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(209, 0, 107, 0.12);
+  }
+  textarea.field {
+    height: auto;
+    padding: 10px 12px;
+    line-height: 1.5;
+  }
+  .label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .panel {
+    border-radius: var(--radius-panel);
+    background: #fff;
+    border: 1px solid var(--color-line);
+    box-shadow: 0 1px 3px rgba(23, 25, 30, 0.04);
+  }
+  .link-underline {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s;
+  }
+  .link-underline:hover {
+    color: var(--color-accent);
+  }
+
+  /* Glassmorphism */
+  .glass-header {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .glass-pill {
+    background: rgba(23, 25, 30, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+/* Leaflet: pines y grupos con el estilo de TILCA */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--color-map);
+}
+.tilca-pin-wrap {
+  background: none !important;
+  border: 0 !important;
+}
+/* Pin: cuadrito del color de la categoría + precio, con una punta que marca el lugar exacto. */
+.tilca-pin {
+  --cat: var(--color-ink-2);
+  --cat-ink: #fff;
+  position: absolute;
+  left: 0;
+  bottom: 7px;
+  transform: translateX(-50%);
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px 0 9px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(23, 25, 30, 0.22), 0 4px 12px rgba(23, 25, 30, 0.14);
+  border: 1px solid rgba(23, 25, 30, 0.07);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* La punta: un rombo del mismo blanco bajo el pin. */
+.tilca-pin::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  border-right: 1px solid rgba(23, 25, 30, 0.07);
+  border-bottom: 1px solid rgba(23, 25, 30, 0.07);
+  transform: translateX(-50%) rotate(45deg);
+  border-bottom-right-radius: 2px;
+}
+.tilca-pin-cat {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--cat);
+  color: var(--cat-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  flex: none;
+}
+/* Título que aparece al pasar el mouse (o al seleccionar). */
+.tilca-pin-title {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: rgba(23, 25, 30, 0.92);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.tilca-pin:hover,
+.tilca-pin:focus-visible {
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 3px 8px rgba(23, 25, 30, 0.25), 0 10px 20px rgba(23, 25, 30, 0.16);
+  z-index: 10;
+}
+.tilca-pin:hover .tilca-pin-title,
+.tilca-pin:focus-visible .tilca-pin-title {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.tilca-pin.is-selected {
+  background: var(--color-ink);
+  color: #fff;
+  height: 35px;
+  font-size: 15px;
+  font-weight: 700;
+  padding-right: 14px;
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(23, 25, 30, 0.35), 0 10px 24px rgba(23, 25, 30, 0.22);
+  transform: translateX(-50%) translateY(-2px) scale(1.04);
+}
+.tilca-pin.is-selected .tilca-pin-cat {
+  width: 14px;
+  height: 14px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+/* Eventos de hoy: un punto que late, para que se note qué pasa ahora. */
+.tilca-pin.is-today .tilca-pin-cat {
+  animation: tilca-pulse 1.8s ease-out infinite;
+}
+@keyframes tilca-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--cat) 60%, transparent); }
+  100% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--cat) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tilca-pin.is-today .tilca-pin-cat { animation: none; }
+}
+
+/* Grupo: anillo partido por las categorías que tiene dentro, con el número al centro. */
+.tilca-cluster {
+  display: block;
+  box-sizing: border-box;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  padding: 5px;
+  background: var(--ring);
+  box-shadow: 0 3px 10px rgba(23, 25, 30, 0.28);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tilca-cluster span {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color-ink);
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tilca-cluster:hover {
+  transform: scale(1.1);
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+}

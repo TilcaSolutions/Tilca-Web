@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>TILCA · Organizador: estadísticas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F7}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid #D1006B;outline-offset:2px}
+</style>
+</helmet>
+<div style="font-family: 'Archivo', system-ui, sans-serif; color: #17191E; background: #F4F5F7; min-height: 900px; display: flex">
+  <nav aria-label="Menú del organizador" style="flex: 0 0 232px; background: #FFFFFF; border-right: 1px solid #E4E6EA; padding: 20px 12px; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px">
+    <a href="Main.dc.html" aria-label="TILCA, ver el mapa" style="display: flex; align-items: baseline; gap: 3px; padding: 0 10px; font-stretch: 75%; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; line-height: 1">tilca<span style="width: 7px; height: 7px; border-radius: 50%; background: #D1006B"></span></a>
+    <span style="padding: 4px 10px 20px; font-size: 13px; color: #6B707A">Para organizadores</span>
+    <a href="Organizador.dc.html" style="{{nav1}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"></rect><path d="M3 9h18M8 2v4M16 2v4"></path></svg>Mis eventos</a>
+    <a href="Estadisticas.dc.html" style="{{nav2}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V11M10 20V4M16 20v-6M21 20H3"></path></svg>Estadísticas</a>
+    <a href="Organizador.dc.html" style="{{nav3}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></svg>Pagos</a>
+    <a href="Organizador.dc.html" style="{{nav3}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>Perfil de la compañía</a>
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 10px; border-top: 1px solid #E4E6EA">
+      <span style="width: 32px; height: 32px; border-radius: 6px; background: #C8102E; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-stretch: 75%; font-weight: 800; font-size: 14px">TA</span>
+      <span style="display: flex; flex-direction: column; min-width: 0">
+        <span style="font-size: 14px; font-weight: 600">Teatro de Altura</span>
+        <span style="font-size: 12px; color: #6B707A">Cuenta de ejemplo</span>
+      </span>
+    </div>
+  </nav>
+  <main style="flex: 1; min-width: 0; padding: 24px 40px 32px; display: flex; flex-direction: column; gap: 16px">
+    <div>
+      <nav aria-label="Ruta" style="font-size: 14px; color: #4B505A"><a href="Organizador.dc.html" style="text-decoration: underline; text-underline-offset: 3px">Mis eventos</a> <span aria-hidden="true">/</span> La casa de los espejos</nav>
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-top: 10px">
+        <div>
+          <h1 style="margin: 0; font-stretch: 75%; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.5px">La casa de los espejos</h1>
+          <p style="margin: 8px 0 0; font-size: 15px; color: #4B505A">Viernes 27 de noviembre, 20:00, en el Teatro Municipal</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <div role="group" aria-label="Periodo" style="display: flex; padding: 3px; border-radius: 8px; background: #E4E6EA">
+            <button type="button" onClick="{{pick7}}" aria-pressed="{{p7}}" style="{{s7}}">Últimos 7 días</button>
+            <button type="button" onClick="{{pickAll}}" aria-pressed="{{pAll}}" style="{{sAll}}">Desde que se publicó</button>
+          </div>
+          <a href="Evento.dc.html" style="height: 38px; display: flex; align-items: center; padding: 0 14px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font-size: 14px; font-weight: 600">Ver ficha pública</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 16px">
+      <section style="flex: 1; min-width: 0; padding: 20px 22px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E4E6EA; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Entradas vendidas</h2>
+          <span style="font-size: 14px; color: #4B505A">Faltan 7 días</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px"><span style="font-stretch: 75%; font-weight: 700; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums">96</span><span style="font-size: 16px; color: #4B505A">de 220, el 44%</span></div>
+        <div style="position: relative; padding-top: 22px">
+          <div style="height: 12px; border-radius: 4px; background: #E4E6EA; overflow: hidden"><div style="width: 44%; height: 100%; background: #17191E"></div></div>
+          <span style="position: absolute; left: 70%; top: 16px; width: 2px; height: 24px; background: #8A5A00"></span>
+          <span style="position: absolute; left: 70%; top: 0; transform: translateX(-50%); font-size: 12px; color: #5C3D00; white-space: nowrap">Eventos parecidos: 70%</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px">
+          <span style="font-size: 14px; color: #4B505A; max-width: 38ch">Vas por debajo de lo normal. La preventa a Bs 40 termina el martes 24.</span>
+          <a href="Organizador.dc.html" style="flex: none; height: 40px; display: flex; align-items: center; padding: 0 16px; border-radius: 8px; background: #D1006B; color: #FFFFFF; font-size: 14px; font-weight: 600">Destacar en la cartelera</a>
+        </div>
+      </section>
+
+      <section style="flex: 1; min-width: 0; padding: 20px 22px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E4E6EA; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Del clic a la entrada</h2>
+        <div style="display: grid; grid-template-columns: 1fr 64px; align-items: center; row-gap: 4px; column-gap: 12px; font-size: 14px; font-variant-numeric: tabular-nums">
+          <span>Vieron la ficha del evento</span><strong style="text-align: right; font-size: 16px; font-weight: 600">{{fViews}}</strong>
+          <span style="grid-column: span 2; height: 8px; border-radius: 0 4px 4px 0; background: #2F5D8A; width: 100%"></span>
+          <span style="margin-top: 8px">Hicieron clic en comprar <span style="color: #6B707A">{{fClickRate}}</span></span><strong style="margin-top: 8px; text-align: right; font-size: 16px; font-weight: 600">{{fClicks}}</strong>
+          <span style="grid-column: span 2; height: 8px; border-radius: 0 4px 4px 0; background: #2F5D8A; width: 15%"></span>
+          <span style="margin-top: 8px">Compraron con el código TILCA <span style="color: #6B707A">{{fBuyRate}}</span></span><strong style="margin-top: 8px; text-align: right; font-size: 16px; font-weight: 600">{{fTickets}}</strong>
+          <span style="grid-column: span 2; height: 8px; border-radius: 0 4px 4px 0; background: #2F5D8A; width: 3.4%; min-width: 4px"></span>
+        </div>
+      </section>
+    </div>
+
+    <div style="flex: 1; display: flex; gap: 16px">
+      <section style="flex: 3; min-width: 0; padding: 20px 22px 14px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E4E6EA">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">Entradas vendidas por TILCA, por día</h2>
+        <p style="margin: 4px 0 6px; font-size: 14px; color: #4B505A">Del 7 al 20 de noviembre. 28 en total.</p>
+        <svg viewBox="0 0 640 290" width="100%" role="img" aria-label="Entradas por día del 7 al 20 de noviembre; el pico fue el miércoles 18 con 5" style="display: block; font-family: Archivo, sans-serif">
+          <line x1="34" x2="632" y1="262" y2="262" stroke="#C8CCD2" stroke-width="1"></line>
+          <text x="26" y="266" text-anchor="end" font-size="11" fill="#6B707A">0</text>
+          <line x1="34" x2="632" y1="186" y2="186" stroke="#EDEEF1" stroke-width="1"></line>
+          <text x="26" y="190" text-anchor="end" font-size="11" fill="#6B707A">2</text>
+          <line x1="34" x2="632" y1="110" y2="110" stroke="#EDEEF1" stroke-width="1"></line>
+          <text x="26" y="114" text-anchor="end" font-size="11" fill="#6B707A">4</text>
+          <line x1="34" x2="632" y1="34" y2="34" stroke="#EDEEF1" stroke-width="1"></line>
+          <text x="26" y="38" text-anchor="end" font-size="11" fill="#6B707A">6</text>
+          <text x="55.4" y="280" text-anchor="middle" font-size="11" fill="#6B707A">7</text>
+          <path d="M86.1 262 V228.0 Q86.1 224.0 90.1 224.0 H106.1 Q110.1 224.0 110.1 228.0 V262 Z" fill="#2F5D8A"><title>Viernes 8 nov: 1 entrada</title></path>
+          <text x="98.1" y="280" text-anchor="middle" font-size="11" fill="#6B707A">8</text>
+          <text x="140.8" y="280" text-anchor="middle" font-size="11" fill="#6B707A">9</text>
+          <path d="M171.5 262 V190.0 Q171.5 186.0 175.5 186.0 H191.5 Q195.5 186.0 195.5 190.0 V262 Z" fill="#2F5D8A"><title>Domingo 10 nov: 2 entradas</title></path>
+          <text x="183.5" y="280" text-anchor="middle" font-size="11" fill="#6B707A">10</text>
+          <path d="M214.2 262 V228.0 Q214.2 224.0 218.2 224.0 H234.2 Q238.2 224.0 238.2 228.0 V262 Z" fill="#2F5D8A"><title>Lunes 11 nov: 1 entrada</title></path>
+          <text x="226.2" y="280" text-anchor="middle" font-size="11" fill="#6B707A">11</text>
+          <path d="M256.9 262 V152.0 Q256.9 148.0 260.9 148.0 H276.9 Q280.9 148.0 280.9 152.0 V262 Z" fill="#2F5D8A"><title>Martes 12 nov: 3 entradas</title></path>
+          <text x="268.9" y="280" text-anchor="middle" font-size="11" fill="#6B707A">12</text>
+          <path d="M299.6 262 V190.0 Q299.6 186.0 303.6 186.0 H319.6 Q323.6 186.0 323.6 190.0 V262 Z" fill="#2F5D8A"><title>Miércoles 13 nov: 2 entradas</title></path>
+          <text x="311.6" y="280" text-anchor="middle" font-size="11" fill="#6B707A">13</text>
+          <path d="M342.4 262 V228.0 Q342.4 224.0 346.4 224.0 H362.4 Q366.4 224.0 366.4 228.0 V262 Z" fill="#2F5D8A"><title>Jueves 14 nov: 1 entrada</title></path>
+          <text x="354.4" y="280" text-anchor="middle" font-size="11" fill="#6B707A">14</text>
+          <path d="M385.1 262 V114.0 Q385.1 110.0 389.1 110.0 H405.1 Q409.1 110.0 409.1 114.0 V262 Z" fill="#2F5D8A"><title>Viernes 15 nov: 4 entradas</title></path>
+          <text x="397.1" y="280" text-anchor="middle" font-size="11" fill="#6B707A">15</text>
+          <path d="M427.8 262 V190.0 Q427.8 186.0 431.8 186.0 H447.8 Q451.8 186.0 451.8 190.0 V262 Z" fill="#2F5D8A"><title>Sábado 16 nov: 2 entradas</title></path>
+          <text x="439.8" y="280" text-anchor="middle" font-size="11" fill="#6B707A">16</text>
+          <path d="M470.5 262 V152.0 Q470.5 148.0 474.5 148.0 H490.5 Q494.5 148.0 494.5 152.0 V262 Z" fill="#2F5D8A"><title>Domingo 17 nov: 3 entradas</title></path>
+          <text x="482.5" y="280" text-anchor="middle" font-size="11" fill="#6B707A">17</text>
+          <path d="M513.2 262 V76.0 Q513.2 72.0 517.2 72.0 H533.2 Q537.2 72.0 537.2 76.0 V262 Z" fill="#2F5D8A"><title>Lunes 18 nov: 5 entradas</title></path>
+          <text x="525.2" y="280" text-anchor="middle" font-size="11" fill="#6B707A">18</text>
+          <path d="M555.9 262 V190.0 Q555.9 186.0 559.9 186.0 H575.9 Q579.9 186.0 579.9 190.0 V262 Z" fill="#2F5D8A"><title>Martes 19 nov: 2 entradas</title></path>
+          <text x="567.9" y="280" text-anchor="middle" font-size="11" fill="#6B707A">19</text>
+          <path d="M598.6 262 V190.0 Q598.6 186.0 602.6 186.0 H618.6 Q622.6 186.0 622.6 190.0 V262 Z" fill="#2F5D8A"><title>Miércoles 20 nov: 2 entradas</title></path>
+          <text x="610.6" y="280" text-anchor="middle" font-size="11" fill="#6B707A">20</text>
+          <text x="507.2" y="76" text-anchor="end" font-size="12" fill="#17191E" font-weight="600">5 el miércoles 18</text>
+          <text x="507.2" y="92" text-anchor="end" font-size="12" fill="#4B505A">salió en la cartelera de WhatsApp</text>
+        </svg>
+      </section>
+
+      <section style="flex: 2; min-width: 0; padding: 20px 22px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E4E6EA; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600">De dónde vino la gente que compró</h2>
+        <div style="display: grid; grid-template-columns: 150px 1fr 28px; align-items: center; row-gap: 12px; column-gap: 10px; font-size: 14px; font-variant-numeric: tabular-nums">
+          <span>Cartelera de WhatsApp</span><span title="12 entradas" style="height: 14px; border-radius: 0 4px 4px 0; background: #2F5D8A; width: 100%"></span><span style="text-align: right; font-weight: 600">12</span>
+          <span>Mapa de TILCA</span><span title="8 entradas" style="height: 14px; border-radius: 0 4px 4px 0; background: #2F5D8A; width: 67%"></span><span style="text-align: right; font-weight: 600">8</span>
+          <span>Link de un amigo</span><span title="5 entradas" style="height: 14px; border-radius: 0 4px 4px 0; background: #2F5D8A; width: 42%"></span><span style="text-align: right; font-weight: 600">5</span>
+          <span>Búsqueda</span><span title="3 entradas" style="height: 14px; border-radius: 0 4px 4px 0; background: #2F5D8A; width: 25%"></span><span style="text-align: right; font-weight: 600">3</span>
+        </div>
+        <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid #E4E6EA; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+          <span style="font-size: 14px; color: #4B505A; line-height: 1.45"><strong style="color: #17191E; font-weight: 600">21 de 28 son público nuevo,</strong><br>nunca habían ido a una función tuya.</span>
+          <span style="display: flex; flex-direction: column; align-items: flex-end">
+            <span style="font-size: 13px; color: #4B505A">Pagas a TILCA</span>
+            <span style="font-stretch: 75%; font-weight: 700; font-size: 26px; font-variant-numeric: tabular-nums">Bs 105</span>
+            <span style="font-size: 12px; color: #6B707A">21 × Bs 5</span>
+          </span>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { range: 'all' };
+  }
+  renderVals() {
+    const base = 'height: 32px; padding: 0 12px; border: 0; border-radius: 6px; font: inherit; font-size: 14px; cursor: pointer; ';
+    const on = base + 'background: #FFFFFF; color: #17191E; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.18);';
+    const off = base + 'background: transparent; color: #4B505A;';
+    const nav = 'display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 10px; border-radius: 8px; font-size: 15px; ';
+    const all = this.state.range === 'all';
+    return {
+      nav1: nav + 'color: #4B505A;',
+      nav2: nav + 'background: #F4F5F7; font-weight: 600; color: #17191E;',
+      nav3: nav + 'color: #4B505A;',
+      pick7: () => this.setState({ range: '7' }),
+      pickAll: () => this.setState({ range: 'all' }),
+      s7: all ? off : on, sAll: all ? on : off,
+      p7: String(!all), pAll: String(all),
+      fViews: all ? '820' : '342',
+      fClicks: all ? '124' : '51',
+      fTickets: all ? '28' : '13',
+      fClickRate: all ? '15%' : '15%',
+      fBuyRate: all ? '23%' : '25%'
+    };
+  }
+}
+</script>
+</body>
+</html>

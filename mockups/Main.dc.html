@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>TILCA · Inicio con mapa</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F7}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid #D1006B;outline-offset:2px}
+input::placeholder{color:#6B707A}
+</style>
+</helmet>
+<div style="font-family: 'Archivo', system-ui, sans-serif; color: #17191E; background: #FFFFFF; min-height: 900px; display: flex; flex-direction: column">
+
+  <header style="height: 64px; flex: none; display: flex; align-items: center; gap: 28px; padding: 0 24px; border-bottom: 1px solid #E4E6EA">
+    <a href="Main.dc.html" aria-label="TILCA, inicio" style="display: flex; align-items: baseline; gap: 3px; font-stretch: 75%; font-weight: 800; font-size: 30px; letter-spacing: -0.5px; line-height: 1">tilca<span style="width: 8px; height: 8px; border-radius: 50%; background: #D1006B"></span></a>
+    <label style="flex: 0 1 440px; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; border-radius: 8px; background: #F4F5F7; color: #6B707A">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input aria-label="Buscar" placeholder="Busca una obra, artista o lugar" style="flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 15px; color: #17191E; outline: none">
+    </label>
+    <nav style="margin-left: auto; display: flex; align-items: center; gap: 8px">
+      <a href="Registro.dc.html" style="font-size: 15px; font-weight: 500; padding: 10px 14px; color: #4B505A">Publicar un evento</a>
+      <a href="Registro.dc.html" style="font-size: 15px; font-weight: 600; height: 40px; display: flex; align-items: center; padding: 0 16px; border-radius: 8px; border: 1px solid #C8CCD2">Iniciar sesión</a>
+    </nav>
+  </header>
+
+  <div style="height: 56px; flex: none; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid #E4E6EA">
+    <div role="group" aria-label="Cuándo" style="display: flex; padding: 3px; border-radius: 8px; background: #F4F5F7">
+      <button type="button" onClick="{{pickHoy}}" aria-pressed="{{pHoy}}" style="{{sHoy}}">Hoy</button>
+      <button type="button" onClick="{{pickFinde}}" aria-pressed="{{pFinde}}" style="{{sFinde}}">Este finde</button>
+      <button type="button" onClick="{{pickSemana}}" aria-pressed="{{pSemana}}" style="{{sSemana}}">Esta semana</button>
+    </div>
+    <span style="width: 1px; height: 24px; background: #E4E6EA"></span>
+    <button type="button" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font: inherit; font-size: 14px">Teatro</button>
+    <button type="button" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font: inherit; font-size: 14px">Música</button>
+    <button type="button" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font: inherit; font-size: 14px">Danza</button>
+    <button type="button" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font: inherit; font-size: 14px">Stand up</button>
+    <button type="button" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font: inherit; font-size: 14px">Arte</button>
+    <span style="width: 1px; height: 24px; background: #E4E6EA"></span>
+    <button type="button" style="height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font: inherit; font-size: 14px">Solo gratis</button>
+  </div>
+
+  <main style="flex: 1; display: flex; min-height: 0">
+    <section aria-label="Eventos" style="flex: 0 0 420px; min-width: 0; border-right: 1px solid #E4E6EA; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 18px 20px 12px">
+        <h1 style="margin: 0; font-size: 18px; font-weight: 700">{{countLabel}}</h1>
+        <span style="font-size: 14px; color: #4B505A">Más cercanos primero</span>
+      </div>
+
+      <a href="Evento.dc.html" style="display: flex; gap: 14px; padding: 14px 20px; background: #F4F5F7; box-shadow: inset 3px 0 0 #17191E; border-top: 1px solid #E4E6EA">
+        <span aria-hidden="true" style="flex: none; width: 60px; height: 80px; border-radius: 4px; background: #C8102E; color: #FFFFFF; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-stretch: 62%; font-weight: 800; font-size: 13px; line-height: 0.92; text-transform: uppercase; overflow: hidden">La casa de los espejos</span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 16px; font-weight: 600">La casa de los espejos</span>
+          <span style="font-size: 14px; color: #4B505A">Teatro Municipal, Centro</span>
+          <span style="font-size: 14px; color: #4B505A">Vie 27 nov, 20:00</span>
+          <span style="font-size: 13px; color: #6B707A; margin-top: 2px">Teatro</span>
+        </span>
+        <span style="font-size: 15px; font-weight: 600; white-space: nowrap">Bs 50</span>
+      </a>
+
+      <a href="Evento.dc.html" style="display: flex; gap: 14px; padding: 14px 20px; border-top: 1px solid #E4E6EA">
+        <span aria-hidden="true" style="flex: none; width: 60px; height: 80px; border-radius: 4px; background: #F2B705; color: #17191E; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-stretch: 62%; font-weight: 800; font-size: 15px; line-height: 0.92; text-transform: uppercase; overflow: hidden"><span style="width: 18px; height: 18px; border-radius: 50%; border: 3px solid #17191E; box-sizing: border-box"></span>Noche de jazz</span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 16px; font-weight: 600">Noche de jazz con Cuarteto Altiplano</span>
+          <span style="font-size: 14px; color: #4B505A">Thelonious Jazz Bar, Sopocachi</span>
+          <span style="font-size: 14px; color: #4B505A">Vie 27 nov, 22:00</span>
+          <span style="font-size: 13px; color: #6B707A; margin-top: 2px">Música</span>
+        </span>
+        <span style="font-size: 15px; font-weight: 600; white-space: nowrap">Bs 40</span>
+      </a>
+
+      <a href="Evento.dc.html" style="display: flex; gap: 14px; padding: 14px 20px; border-top: 1px solid #E4E6EA">
+        <span aria-hidden="true" style="flex: none; width: 60px; height: 80px; border-radius: 4px; background: #1F7A4D; color: #FFFFFF; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-stretch: 62%; font-weight: 800; font-size: 13px; line-height: 0.92; text-transform: uppercase; overflow: hidden">Morenada contem&shy;poránea</span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 16px; font-weight: 600">Morenada contemporánea</span>
+          <span style="font-size: 14px; color: #4B505A">Espacio Simón I. Patiño, Sopocachi</span>
+          <span style="font-size: 14px; color: #4B505A">Sáb 28 nov, 19:30</span>
+          <span style="font-size: 13px; color: #6B707A; margin-top: 2px">Danza</span>
+        </span>
+        <span style="font-size: 15px; font-weight: 600; white-space: nowrap">Bs 35</span>
+      </a>
+
+      <a href="Evento.dc.html" style="display: flex; gap: 14px; padding: 14px 20px; border-top: 1px solid #E4E6EA">
+        <span aria-hidden="true" style="flex: none; width: 60px; height: 80px; border-radius: 4px; background: #1E7FC2; color: #FFFFFF; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-end; font-stretch: 62%; font-weight: 800; font-size: 16px; line-height: 0.9; text-transform: uppercase; overflow: hidden">Micro abierto</span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 16px; font-weight: 600">Micro abierto de stand up</span>
+          <span style="font-size: 14px; color: #4B505A">Equinoccio, Sopocachi</span>
+          <span style="font-size: 14px; color: #4B505A">Sáb 28 nov, 21:00</span>
+          <span style="font-size: 13px; color: #6B707A; margin-top: 2px">Stand up</span>
+        </span>
+        <span style="font-size: 15px; font-weight: 600; white-space: nowrap">Gratis</span>
+      </a>
+
+      <a href="Evento.dc.html" style="display: flex; gap: 14px; padding: 14px 20px; border-top: 1px solid #E4E6EA; border-bottom: 1px solid #E4E6EA">
+        <span aria-hidden="true" style="flex: none; width: 60px; height: 80px; border-radius: 4px; background: #7A3FA0; color: #FFFFFF; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; font-stretch: 62%; font-weight: 800; font-size: 17px; line-height: 0.9; text-transform: uppercase; overflow: hidden"><span style="display: flex; gap: 2px"><span style="width: 8px; height: 14px; background: #F2B705"></span><span style="width: 8px; height: 14px; background: #1E7FC2"></span><span style="width: 8px; height: 14px; background: #C8102E"></span></span>Cholets</span>
+        <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+          <span style="font-size: 16px; font-weight: 600">Cholets: arquitectura de lo nuestro</span>
+          <span style="font-size: 14px; color: #4B505A">Museo Nacional de Arte, Centro</span>
+          <span style="font-size: 14px; color: #4B505A">Hasta el 13 dic</span>
+          <span style="font-size: 13px; color: #6B707A; margin-top: 2px">Exposición</span>
+        </span>
+        <span style="font-size: 15px; font-weight: 600; white-space: nowrap">Gratis</span>
+      </a>
+    </section>
+
+    <section aria-label="Mapa de eventos" style="flex: 1; min-width: 0; position: relative; overflow: hidden; background: #ECEEEA">
+      <svg width="100%" height="100%" viewBox="0 0 1040 780" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style="position: absolute; inset: 0">
+        <rect width="1040" height="780" fill="#ECEEEA"></rect>
+        <g fill="none" stroke="#E0E3DC" stroke-width="1.5">
+          <path d="M0 40 C260 20 520 70 1040 20"></path>
+          <path d="M0 130 C200 100 380 170 560 130 S900 70 1040 110"></path>
+          <path d="M0 310 C160 270 300 350 480 310 S860 240 1040 290"></path>
+          <path d="M0 450 C200 420 360 490 560 440 S900 390 1040 430"></path>
+          <path d="M0 610 C180 570 340 660 540 610 S880 550 1040 590"></path>
+          <path d="M0 720 C220 680 420 760 640 720 S920 670 1040 710"></path>
+        </g>
+        <path d="M535 285 l120 -14 l14 62 l-118 18 z" fill="#D6E4CF"></path>
+        <circle cx="540" cy="525" r="16" fill="#D6E4CF"></circle>
+        <path d="M610 360 l60 -6 l8 40 l-62 8 z" fill="#D6E4CF"></path>
+        <path d="M80 0 C160 140 260 220 330 330 S520 560 640 640 S880 740 1040 780" fill="none" stroke="#BCD5E8" stroke-width="9" stroke-linecap="round"></path>
+        <g fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round">
+          <g transform="rotate(-35 380 240)">
+            <path d="M290 170 H470 M290 205 H470 M290 240 H470 M290 275 H470 M290 310 H470 M310 160 V320 M350 160 V320 M390 160 V320 M430 160 V320"></path>
+          </g>
+          <g transform="rotate(22 520 500)">
+            <path d="M420 430 H630 M420 470 H630 M420 510 H630 M420 550 H630 M420 590 H630 M450 420 V600 M500 420 V600 M550 420 V600 M600 420 V600"></path>
+          </g>
+          <g transform="rotate(-10 780 270)">
+            <path d="M690 210 H880 M690 250 H880 M690 290 H880 M690 330 H880 M720 200 V340 M770 200 V340 M820 200 V340 M860 200 V340"></path>
+          </g>
+          <g transform="rotate(12 200 410)">
+            <path d="M120 360 H290 M120 400 H290 M120 440 H290 M150 350 V460 M200 350 V460 M250 350 V460"></path>
+          </g>
+          <path d="M700 620 C760 640 820 660 900 700 M720 680 C780 700 850 720 960 760 M760 600 C800 640 840 690 860 760"></path>
+        </g>
+        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M250 90 L380 250 L520 400 L620 540 L700 780" stroke="#D3D6DB" stroke-width="16"></path>
+          <path d="M380 250 L760 230 L1040 200" stroke="#D3D6DB" stroke-width="14"></path>
+          <path d="M0 420 C200 400 380 450 520 400" stroke="#D3D6DB" stroke-width="12"></path>
+          <path d="M250 90 L380 250 L520 400 L620 540 L700 780" stroke="#FFFFFF" stroke-width="12"></path>
+          <path d="M380 250 L760 230 L1040 200" stroke="#FFFFFF" stroke-width="10"></path>
+          <path d="M0 420 C200 400 380 450 520 400" stroke="#FFFFFF" stroke-width="8"></path>
+        </g>
+        <g fill="none" stroke-width="3" stroke-linecap="round">
+          <path d="M40 60 L230 140 L360 240" stroke="#D52B1E"></path>
+          <path d="M360 240 L470 360 L560 470 L660 600" stroke="#3FA9DD"></path>
+          <path d="M60 560 L300 520 L560 470" stroke="#E5B800"></path>
+          <path d="M360 240 L560 252 L800 236" stroke="#8C929B"></path>
+        </g>
+        <g fill="#FFFFFF" stroke-width="3">
+          <circle cx="40" cy="60" r="6" stroke="#D52B1E"></circle>
+          <circle cx="230" cy="140" r="6" stroke="#D52B1E"></circle>
+          <circle cx="360" cy="240" r="7" stroke="#17191E"></circle>
+          <circle cx="470" cy="360" r="6" stroke="#3FA9DD"></circle>
+          <circle cx="560" cy="470" r="7" stroke="#17191E"></circle>
+          <circle cx="660" cy="600" r="6" stroke="#3FA9DD"></circle>
+          <circle cx="60" cy="560" r="6" stroke="#E5B800"></circle>
+          <circle cx="300" cy="520" r="6" stroke="#E5B800"></circle>
+          <circle cx="560" cy="252" r="6" stroke="#8C929B"></circle>
+          <circle cx="800" cy="236" r="6" stroke="#8C929B"></circle>
+        </g>
+        <g font-family="Archivo, sans-serif" font-size="15" font-weight="500" fill="#6B707A">
+          <text x="410" y="185">Centro</text>
+          <text x="120" y="330">San Pedro</text>
+          <text x="570" y="615">Sopocachi</text>
+          <text x="820" y="320">Miraflores</text>
+          <text x="840" y="660">Obrajes</text>
+        </g>
+        <g font-family="Archivo, sans-serif" font-size="12" font-weight="500" fill="#8C929B">
+          <text x="70" y="110" transform="rotate(22 70 110)">Línea Roja</text>
+          <text x="600" y="530" transform="rotate(52 600 530)">Línea Celeste</text>
+          <text x="110" y="575" transform="rotate(-9 110 575)">Línea Amarilla</text>
+          <text x="640" y="268">Línea Blanca</text>
+        </g>
+      </svg>
+
+      <a href="Evento.dc.html" style="position: absolute; left: 28.8%; top: 38.5%; transform: translate(-50%, -100%); height: 30px; display: flex; align-items: center; padding: 0 11px; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.2), 0 3px 8px rgba(23,25,30,0.12)">Gratis</a>
+      <a href="Evento.dc.html" style="position: absolute; left: 48%; top: 64%; transform: translate(-50%, -100%); height: 30px; display: flex; align-items: center; padding: 0 11px; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.2), 0 3px 8px rgba(23,25,30,0.12)">Bs 40</a>
+      <a href="Evento.dc.html" style="position: absolute; left: 53%; top: 71%; transform: translate(-50%, -100%); height: 30px; display: flex; align-items: center; padding: 0 11px; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.2), 0 3px 8px rgba(23,25,30,0.12)">Bs 35</a>
+      <a href="Evento.dc.html" style="position: absolute; left: 43%; top: 56%; transform: translate(-50%, -100%); height: 30px; display: flex; align-items: center; padding: 0 11px; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.2), 0 3px 8px rgba(23,25,30,0.12)">Gratis</a>
+      <a href="Evento.dc.html" style="position: absolute; left: 73%; top: 39%; transform: translate(-50%, -100%); height: 30px; display: flex; align-items: center; padding: 0 11px; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.2), 0 3px 8px rgba(23,25,30,0.12)">Bs 30</a>
+      <a href="Evento.dc.html" style="position: absolute; left: 19%; top: 55%; transform: translate(-50%, -100%); height: 30px; display: flex; align-items: center; padding: 0 11px; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.2), 0 3px 8px rgba(23,25,30,0.12)">Bs 20</a>
+      <a href="Evento.dc.html" style="position: absolute; left: 80%; top: 88%; transform: translate(-50%, -100%); height: 30px; display: flex; align-items: center; padding: 0 11px; border-radius: 999px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.2), 0 3px 8px rgba(23,25,30,0.12)">Bs 60</a>
+      <button type="button" aria-label="4 eventos más en esta zona" style="position: absolute; left: 61%; top: 54%; transform: translate(-50%, -50%); width: 38px; height: 38px; border-radius: 50%; border: 3px solid #FFFFFF; background: #4B505A; color: #FFFFFF; font: inherit; font-size: 14px; font-weight: 700; box-shadow: 0 2px 6px rgba(23,25,30,0.25)">+4</button>
+
+      <a href="Evento.dc.html" style="position: absolute; left: 36.5%; top: 34.6%; transform: translate(-50%, -100%); height: 34px; display: flex; align-items: center; padding: 0 13px; border-radius: 999px; background: #17191E; color: #FFFFFF; font-size: 15px; font-weight: 700; box-shadow: 0 2px 4px rgba(23,25,30,0.3), 0 6px 14px rgba(23,25,30,0.2)">Bs 50</a>
+      <a href="Evento.dc.html" style="position: absolute; left: calc(36.5% + 40px); top: calc(34.6% + 10px); width: 300px; display: flex; gap: 12px; padding: 12px; border-radius: 12px; background: #FFFFFF; box-shadow: 0 2px 4px rgba(23,25,30,0.12), 0 12px 28px rgba(23,25,30,0.18)">
+        <span aria-hidden="true" style="flex: none; width: 54px; height: 72px; border-radius: 4px; background: #C8102E; color: #FFFFFF; padding: 5px; box-sizing: border-box; display: flex; align-items: flex-end; font-stretch: 62%; font-weight: 800; font-size: 12px; line-height: 0.92; text-transform: uppercase; overflow: hidden">La casa de los espejos</span>
+        <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+          <span style="font-size: 15px; font-weight: 600">La casa de los espejos</span>
+          <span style="font-size: 13px; color: #4B505A">Vie 27 nov, 20:00</span>
+          <span style="font-size: 13px; color: #4B505A">A 6 min de la estación Prado</span>
+          <span style="font-size: 13px; font-weight: 600; color: #D1006B; margin-top: 2px">Ver evento</span>
+        </span>
+      </a>
+
+      <div style="position: absolute; right: 20px; bottom: 24px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; flex-direction: column; border-radius: 8px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(23,25,30,0.2); overflow: hidden">
+          <button type="button" aria-label="Acercar" style="width: 40px; height: 40px; border: 0; border-bottom: 1px solid #E4E6EA; background: #FFFFFF; font: inherit; font-size: 20px">+</button>
+          <button type="button" aria-label="Alejar" style="width: 40px; height: 40px; border: 0; background: #FFFFFF; font: inherit; font-size: 20px">−</button>
+        </div>
+        <button type="button" aria-label="Ir a mi ubicación" style="width: 40px; height: 40px; border: 0; border-radius: 8px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(23,25,30,0.2); display: flex; align-items: center; justify-content: center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17191E" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>
+        </button>
+      </div>
+      <div style="position: absolute; left: 20px; bottom: 24px; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: rgba(255,255,255,0.92); font-size: 13px; color: #4B505A">
+        <svg width="28" height="10" viewBox="0 0 28 10" aria-hidden="true"><path d="M2 5 H26" stroke="#3FA9DD" stroke-width="3" stroke-linecap="round"></path><circle cx="14" cy="5" r="3.5" fill="#FFFFFF" stroke="#3FA9DD" stroke-width="2.5"></circle></svg>
+        Líneas y estaciones de Mi Teleférico
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { when: 'semana' };
+  }
+  renderVals() {
+    const base = 'height: 30px; padding: 0 12px; border: 0; border-radius: 6px; font: inherit; font-size: 14px; cursor: pointer; ';
+    const on = base + 'background: #FFFFFF; color: #17191E; font-weight: 600; box-shadow: 0 1px 2px rgba(23,25,30,0.18);';
+    const off = base + 'background: transparent; color: #4B505A;';
+    const w = this.state.when;
+    const counts = { hoy: '6 eventos hoy', finde: '14 eventos este finde', semana: '23 eventos esta semana' };
+    return {
+      pickHoy: () => this.setState({ when: 'hoy' }),
+      pickFinde: () => this.setState({ when: 'finde' }),
+      pickSemana: () => this.setState({ when: 'semana' }),
+      sHoy: w === 'hoy' ? on : off, sFinde: w === 'finde' ? on : off, sSemana: w === 'semana' ? on : off,
+      pHoy: String(w === 'hoy'), pFinde: String(w === 'finde'), pSemana: String(w === 'semana'),
+      countLabel: counts[w]
+    };
+  }
+}
+</script>
+</body>
+</html>

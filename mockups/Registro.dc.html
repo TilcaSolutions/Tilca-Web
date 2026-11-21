@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>TILCA · Registro y rol</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4F5F7}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid #D1006B;outline-offset:2px}
+input::placeholder{color:#6B707A}
+</style>
+</helmet>
+<div style="font-family: 'Archivo', system-ui, sans-serif; color: #17191E; background: #FFFFFF; min-height: 900px; display: flex">
+
+  <aside aria-label="Afiches de eventos" style="flex: 0 0 640px; position: relative; overflow: hidden; background: #DADDE2; padding: 10px; box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: 10px">
+    <div style="background: #C8102E; color: #FFFFFF; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden"><span style="font-size: 11px">Teatro de Altura</span><span style="font-stretch: 62%; font-weight: 800; font-size: 38px; line-height: 0.86; text-transform: uppercase">La casa de los espejos</span></div>
+    <div style="background: #F2B705; color: #17191E; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden"><span style="width: 44px; height: 44px; border-radius: 50%; border: 6px solid #17191E; box-sizing: border-box"></span><span style="font-stretch: 62%; font-weight: 800; font-size: 44px; line-height: 0.86; text-transform: uppercase">Noche de jazz</span></div>
+    <div style="background: #17191E; color: #FFFFFF; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden"><span style="font-stretch: 62%; font-weight: 800; font-size: 34px; line-height: 0.86; text-transform: uppercase">Ciclo de cine boliviano</span></div>
+    <div style="background: #1F7A4D; color: #FFFFFF; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden"><span style="font-stretch: 62%; font-weight: 800; font-size: 34px; line-height: 0.86; text-transform: uppercase">Morenada contem&shy;poránea</span></div>
+    <div style="background: #D1006B; color: #FFFFFF; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden"><span style="font-size: 11px">Sáb 28 nov</span><span style="font-stretch: 62%; font-weight: 800; font-size: 44px; line-height: 0.86; text-transform: uppercase">Cumbia en el Prado</span></div>
+    <div style="background: #1E7FC2; color: #FFFFFF; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden"><span style="font-stretch: 62%; font-weight: 800; font-size: 44px; line-height: 0.86; text-transform: uppercase">Micro abierto</span></div>
+    <div style="background: #7A3FA0; color: #FFFFFF; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden"><span style="display: flex; gap: 4px"><span style="width: 14px; height: 26px; background: #F2B705"></span><span style="width: 14px; height: 26px; background: #1E7FC2"></span><span style="width: 14px; height: 26px; background: #C8102E"></span></span><span style="font-stretch: 62%; font-weight: 800; font-size: 44px; line-height: 0.86; text-transform: uppercase">Cholets</span></div>
+    <div style="background: #FFFFFF; color: #17191E; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden"><span style="font-stretch: 62%; font-weight: 800; font-size: 34px; line-height: 0.86; text-transform: uppercase">Poesía en Sopocachi</span></div>
+    <div style="background: #C8102E; color: #FFFFFF; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden"><span style="font-stretch: 62%; font-weight: 800; font-size: 34px; line-height: 0.86; text-transform: uppercase">Hamlet en aymara</span></div>
+    <div style="position: absolute; left: 32px; right: 32px; bottom: 32px; padding: 24px 28px; border-radius: 12px; background: #FFFFFF; box-shadow: 0 12px 32px rgba(23,25,30,0.25)">
+      <span style="display: flex; align-items: baseline; gap: 3px; font-stretch: 75%; font-weight: 800; font-size: 30px; letter-spacing: -0.5px; line-height: 1">tilca<span style="width: 8px; height: 8px; border-radius: 50%; background: #D1006B"></span></span>
+      <p style="margin: 12px 0 0; font-size: 20px; line-height: 1.35; font-weight: 500; max-width: 34ch">Todo lo que pasa esta semana en los escenarios de La Paz, en un solo mapa.</p>
+    </div>
+  </aside>
+
+  <main style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 48px 32px">
+    <div style="width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 20px">
+      <div>
+        <h1 style="margin: 0; font-stretch: 75%; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.5px">Crea tu cuenta</h1>
+        <p style="margin: 10px 0 0; font-size: 15px; color: #4B505A">¿Ya tienes una? <a href="Main.dc.html" style="color: #17191E; font-weight: 600; text-decoration: underline; text-underline-offset: 3px">Inicia sesión</a></p>
+      </div>
+
+      <fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+        <legend style="font-size: 15px; font-weight: 600; margin-bottom: 10px">¿Para qué vas a usar TILCA?</legend>
+        <button type="button" role="radio" onClick="{{pickUser}}" aria-checked="{{userChecked}}" style="{{userStyle}}">
+          <span aria-hidden="true" style="{{userDot}}"></span>
+          <span style="display: flex; flex-direction: column; gap: 3px; text-align: left">
+            <span style="font-size: 16px; font-weight: 600">Para ir a eventos</span>
+            <span style="font-size: 14px; color: #4B505A; line-height: 1.4">Guarda eventos, recibe la cartelera del finde y mira a qué van tus amigos.</span>
+          </span>
+        </button>
+        <button type="button" role="radio" onClick="{{pickOrg}}" aria-checked="{{orgChecked}}" style="{{orgStyle}}">
+          <span aria-hidden="true" style="{{orgDot}}"></span>
+          <span style="display: flex; flex-direction: column; gap: 3px; text-align: left">
+            <span style="font-size: 16px; font-weight: 600">Para publicar mis eventos</span>
+            <span style="font-size: 14px; color: #4B505A; line-height: 1.4">Llega a público nuevo y mira cuántas entradas te trae TILCA. Pagas solo por resultados.</span>
+          </span>
+        </button>
+      </fieldset>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="correo" style="font-size: 14px; font-weight: 600">Correo</label>
+        <input id="correo" type="email" placeholder="nombre@correo.com" style="height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font: inherit; font-size: 15px">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="clave" style="font-size: 14px; font-weight: 600">Contraseña</label>
+        <input id="clave" type="password" placeholder="Al menos 8 caracteres" style="height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid #C8CCD2; background: #FFFFFF; font: inherit; font-size: 15px">
+      </div>
+
+      <a href="{{nextHref}}" style="height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #D1006B; color: #FFFFFF; font-size: 16px; font-weight: 600">{{ctaLabel}}</a>
+      <a href="{{nextHref}}" style="height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 8px; border: 1px solid #C8CCD2; font-size: 15px; font-weight: 600">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"></path></svg>
+        Continuar con Google
+      </a>
+      <p style="margin: 0; font-size: 13px; color: #6B707A; line-height: 1.5">Al crear tu cuenta aceptas los términos de uso y la política de privacidad de TILCA.</p>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { role: 'org' };
+  }
+  renderVals() {
+    const base = 'display: flex; align-items: flex-start; gap: 14px; width: 100%; padding: 16px; border-radius: 10px; font: inherit; color: #17191E; cursor: pointer; ';
+    const on = base + 'border: 2px solid #17191E; background: #F4F5F7; padding: 15px;';
+    const off = base + 'border: 1px solid #C8CCD2; background: #FFFFFF;';
+    const dotBase = 'flex: none; width: 20px; height: 20px; border-radius: 50%; box-sizing: border-box; margin-top: 1px; ';
+    const dotOn = dotBase + 'border: 6px solid #D1006B; background: #FFFFFF;';
+    const dotOff = dotBase + 'border: 2px solid #8C929B; background: #FFFFFF;';
+    const isOrg = this.state.role === 'org';
+    return {
+      pickUser: () => this.setState({ role: 'user' }),
+      pickOrg: () => this.setState({ role: 'org' }),
+      userStyle: isOrg ? off : on,
+      orgStyle: isOrg ? on : off,
+      userDot: isOrg ? dotOff : dotOn,
+      orgDot: isOrg ? dotOn : dotOff,
+      userChecked: String(!isOrg),
+      orgChecked: String(isOrg),
+      nextHref: isOrg ? 'Organizador.dc.html' : 'Main.dc.html',
+      ctaLabel: isOrg ? 'Crear cuenta de organizador' : 'Crear cuenta'
+    };
+  }
+}
+</script>
+</body>
+</html>
