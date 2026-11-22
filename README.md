@@ -66,9 +66,9 @@ Esto es un plan; nada de esta sección está implementado todavía.
 
 | Persona | Rol | Qué hizo en esta entrega |
 | --- | --- | --- |
-| Alexander | CEO, organizador principal | Desarrollo de la app, integración con Stellar y despliegue. |
+| Alexander | CEO y technical founder | Desarrollo de la app, integración con Stellar y despliegue. |
 | Nicolás | Marketing y conexión | Conexión con organizadores, espacios culturales y personas del sector; marketing. |
-| Nahomi | CTO | Diseño y software. |
+| Nahomi | CTO | Diseño y continuidad técnica del software: mantenimiento y evolución de la plataforma. |
 | Fabián Tejerina | Finanzas | Modelo de negocio. |
 
 Origen del código: el MVP se prototipó antes en local y este repositorio se creó el 21/11 para la entrega.
