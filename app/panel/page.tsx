@@ -143,7 +143,7 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[720px] border-collapse text-[15px] tabular">
               <thead>
                 <tr className="text-left text-[13px] text-ink-2">

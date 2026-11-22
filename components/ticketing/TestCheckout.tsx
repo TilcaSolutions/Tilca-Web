@@ -48,7 +48,7 @@ export function TestCheckout({ event, taken: initialTaken }: Props) {
 
   return (
     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-      <section className="panel flex flex-col gap-4 overflow-x-auto p-5" aria-labelledby="h-butacas">
+      <section className="panel relative flex flex-col gap-4 overflow-x-auto p-5" aria-labelledby="h-butacas">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 id="h-butacas" className="m-0 text-base font-semibold">
             Elige tus butacas

@@ -34,7 +34,15 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
           </form>
         </div>
       </nav>
-      <main className="flex min-w-0 flex-1 flex-col gap-5 px-4 py-6 sm:px-10 sm:py-8">{children}</main>
+      <main className="flex min-w-0 flex-1 flex-col gap-5 px-4 py-6 sm:px-10 sm:py-8">
+        {organizer.is_sample && (
+          <p role="status" className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[10px] border border-accent bg-warning-bg px-4 py-2.5 text-sm text-warning-text">
+            <strong className="font-semibold">Modo jurado: datos de ejemplo.</strong>
+            <span>Los eventos, ventas y cobros son de prueba; los comprobantes son transacciones reales en Stellar Testnet.</span>
+          </p>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

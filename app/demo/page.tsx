@@ -22,14 +22,14 @@ export default async function DemoPage() {
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <Logo />
-            <span className="h-4 w-px bg-line" aria-hidden="true" />
-            <span className="font-condensed text-sm font-bold tracking-wider uppercase text-primary">
+            <span className="hidden h-4 w-px bg-line sm:block" aria-hidden="true" />
+            <span className="font-condensed hidden text-sm font-bold tracking-wider uppercase text-primary sm:inline">
               Demo en Stellar Testnet
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/panel" className="btn-secondary h-9 px-3.5 text-xs font-semibold">
+            <Link href="/panel" className="btn-secondary hidden h-9 px-3.5 text-xs font-semibold sm:inline-flex">
               Ir al panel de organizador
             </Link>
             <Link href="/" className="btn-primary h-9 px-3.5 text-xs font-semibold">

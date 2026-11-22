@@ -66,7 +66,7 @@ export default async function PagosPage() {
         </span>
       </section>
 
-      <section className="panel overflow-x-auto">
+      <section className="panel relative overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse text-[15px] tabular">
           <thead>
             <tr className="text-left text-[13px] text-ink-2">

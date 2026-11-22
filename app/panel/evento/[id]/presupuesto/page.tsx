@@ -187,7 +187,7 @@ export default async function BudgetPage({ params }: PageProps<"/panel/evento/[i
             {!s.txs.length ? (
               <p className="m-0 text-sm text-ink-2">Todavía no hay movimientos en Stellar para este evento.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="relative overflow-x-auto">
                 <table className="w-full min-w-[560px] border-collapse text-sm tabular">
                   <thead>
                     <tr className="text-left text-[13px] text-ink-2">

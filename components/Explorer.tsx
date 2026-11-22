@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { CATEGORIES, categoryInfo, type Category } from "@/lib/constants";
 import { formatPrice, formatWhen } from "@/lib/format";
+import { OrganizerBanner } from "./OrganizerBanner";
 import { distanceMeters } from "@/lib/geo";
 import { overlaps, rangeFor, WHEN_LABELS, type WhenFilter } from "@/lib/time-filters";
 import type { PublicEvent } from "@/lib/types";
@@ -108,6 +109,7 @@ export function Explorer({ events }: { events: PublicEvent[] }) {
 
   return (
     <>
+      <OrganizerBanner />
       <div
         className="glass-header sticky top-16 z-30 flex h-14 flex-none items-center gap-2.5 overflow-x-auto border-b border-line px-4 [scrollbar-width:none] sm:px-6"
         aria-label="Filtros"

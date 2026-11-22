@@ -65,7 +65,7 @@ export async function TestTicketingReport({
         </form>
       )}
       {sales.length ? (
-        <div className="overflow-x-auto">
+        <div className="relative overflow-x-auto">
           <table className="w-full min-w-[560px] border-collapse text-sm tabular">
             <thead>
               <tr className="text-left text-[13px] text-ink-2">

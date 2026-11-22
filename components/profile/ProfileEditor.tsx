@@ -245,7 +245,7 @@ export function ProfileEditor({ userId, organizer, initial, published, upcoming,
         </p>
       )}
 
-      <div className="grid items-start gap-5 xl:grid-cols-[400px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[400px_minmax(0,1fr)] [&>*]:min-w-0">
         {/* Controles */}
         <div className="panel flex flex-col gap-5 p-5">
           <section className="flex flex-col gap-3" aria-labelledby="ed-tema">

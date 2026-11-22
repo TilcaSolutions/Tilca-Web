@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "seed:jurado": "tsx --env-file=.env.local scripts/seed-jury.ts",
     "migrate:stellar": "tsx --env-file=.env.local scripts/migrate-stellar.ts",
     "import:superticket": "tsx --env-file=.env.local scripts/import-superticket.ts",
     "typecheck": "tsc --noEmit"

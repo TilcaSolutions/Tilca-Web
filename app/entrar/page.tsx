@@ -39,6 +39,11 @@ export default async function EntrarPage({ searchParams }: PageProps<"/entrar">)
           El enlace venció o ya se usó. Inicia sesión de nuevo.
         </p>
       )}
+      {sp.error === "jurado" && (
+        <p role="alert" className="m-0 rounded-control border border-warn-line bg-warn-bg px-3 py-2 text-sm text-warn-ink">
+          La cuenta de ejemplo no está disponible. Hay que cargar los datos de prueba (npm run seed).
+        </p>
+      )}
       <SignInForm next={next} />
     </AuthLayout>
   );
