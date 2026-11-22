@@ -67,9 +67,9 @@ Esto es un plan; nada de esta sección está implementado todavía.
 
 | Persona | Rol | Qué hizo en esta entrega |
 | --- | --- | --- |
-| Alexander | CEO y technical founder | Desarrollo de la app, integración con Stellar y despliegue. |
-| Nicolás | Marketing y conexión | Conexión con organizadores, espacios culturales y personas del sector; marketing. |
-| Nahomi | CTO | Diseño y continuidad técnica del software: mantenimiento y evolución de la plataforma. |
+| Alexander | CEO y technical founder | Dirección del proyecto, desarrollo de la app, integración con Stellar y despliegue. |
+| Nicolás | Marketing y alianzas | Conexión con organizadores, espacios culturales y personas del sector; marketing. |
+| Nahomi | Diseño de marca y producto | Identidad visual de TILCA, diseño de marca y experiencia de usuario (UI/UX) de la app. |
 
 Origen del código: el código se escribió durante la hackathon; el repositorio se creó el 21/11 para la entrega.
 
