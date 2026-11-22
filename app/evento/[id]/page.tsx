@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Poster } from "@/components/Poster";
+import { CopyCode } from "@/components/event/CopyCode";
 import { SaveButton } from "@/components/event/SaveButton";
 import { ShareButton } from "@/components/event/ShareButton";
 import { ViewTracker } from "@/components/event/ViewTracker";
@@ -10,6 +11,7 @@ import { LocationMap } from "@/components/map/ClientMaps";
 import { categoryInfo, parseChannel } from "@/lib/constants";
 import {
   currentPrice,
+  discountLabel,
   formatLong,
   formatPrice,
   formatWeekdayDay,
@@ -69,6 +71,12 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
   const isDraft = event.status !== "publicado";
   const exhibitionOpen = event.ends_at && new Date(event.starts_at) <= new Date();
   const saves = Number(saveCount ?? 0);
+  // Código de descuento TILCA: solo eventos de pago que publicó su organizador.
+  const code = price !== 0 && !event.source ? event.discount_code : null;
+  const discount = code ? discountLabel(event) : null;
+  const channels = event.sales_channels ?? [];
+  const sellsOnline = !!event.ticket_url && (channels.includes("ticketera") || !code);
+  const sellsInPerson = channels.includes("qr") || channels.includes("puerta");
 
   const rowDt = "border-t border-line/80 py-3 text-ink-2 font-medium";
   const rowDd = "m-0 border-t border-line/80 py-3 text-ink";
@@ -155,7 +163,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
                   rel="noopener noreferrer"
                   className="btn-secondary mt-auto h-9 self-start px-3 text-sm"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#17191E" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-ink" aria-hidden="true">
                     <path d="M7 4v16l13-8z" />
                   </svg>
                   Ver adelanto
@@ -215,9 +223,29 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
             </p>
           )}
 
+          {code && !isPast && !isDraft && (
+            <section aria-labelledby="h-codigo" className="mx-4 mt-5 flex flex-col gap-3 rounded-panel bg-primary-soft p-4 sm:mx-6">
+              <h2 id="h-codigo" className="m-0 text-[15px] leading-snug font-medium text-ink">
+                Compra con el código <strong className="font-bold">{code}</strong>
+                {discount ? (
+                  <>
+                    {" "}
+                    y ahorras <strong className="font-bold">{discount}</strong>
+                  </>
+                ) : null}
+              </h2>
+              <CopyCode code={code} track={sellsOnline ? undefined : { eventId: event.id, channel }} />
+              {sellsInPerson && (
+                <p className="m-0 text-sm text-ink-2">
+                  {sellsOnline ? "¿Pagas por QR o en puerta? Muestra este código al pagar." : "Muestra este código al pagar."}
+                </p>
+              )}
+            </section>
+          )}
+
           {saves > 0 && (
             <div className="mx-4 mt-4 flex items-center gap-2 text-sm text-ink-2 sm:mx-6">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-fog text-accent">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-fog text-primary">
                 ♥
               </span>
               <span>
@@ -228,7 +256,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
 
           <div className="glass-header sticky bottom-0 mt-auto flex flex-col gap-2.5 border-t border-line/80 px-4 pt-4 pb-5 sm:px-6 md:static md:bg-transparent md:backdrop-filter-none">
             <div className="flex flex-wrap gap-2">
-              {event.ticket_url && !isPast ? (
+              {sellsOnline && !isPast ? (
                 <a
                   href={buyHref}
                   className="btn-primary h-12 min-w-0 flex-1 basis-full px-4 text-base whitespace-nowrap"
@@ -237,17 +265,17 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
                 </a>
               ) : (
                 <span className="flex h-12 min-w-0 flex-1 basis-full items-center justify-center rounded-control bg-fog px-3 text-[15px] font-semibold text-ink-2 border border-line/60">
-                  {isPast ? "Este evento ya pasó" : "Entrada libre, sin reserva"}
+                  {isPast ? "Este evento ya pasó" : price === 0 ? "Entrada libre, sin reserva" : "Entradas por QR o en puerta"}
                 </span>
               )}
               <SaveButton eventId={event.id} userId={user?.id ?? null} initialSaved={!!savedRow.data} />
               <ShareButton title={event.title} url={shareUrl} />
             </div>
-            {event.ticket_url && (
+            {sellsOnline && (
               <span className="text-[13px] text-ink-3">
                 {event.source
                   ? `Datos tomados de ${ticketSite ?? "la ticketera"}: la compra y el precio final se confirman allí.`
-                  : `La compra se realiza en ${ticketSite ?? "la ticketera del organizador"}. TILCA solo registra tu código.`}
+                  : `La compra se realiza en ${ticketSite ?? "la ticketera del organizador"}.${code ? ` Usa el código ${code} al pagar.` : ""}`}
               </span>
             )}
           </div>

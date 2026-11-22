@@ -20,7 +20,7 @@ function RoleOption({
   const on = current === value;
   return (
     <label
-      className={`flex w-full cursor-pointer items-start gap-3.5 rounded-[10px] text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent ${
+      className={`flex w-full cursor-pointer items-start gap-3.5 rounded-[10px] text-ink focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${
         on ? "border-2 border-ink bg-fog p-[15px]" : "border border-control bg-white p-4 hover:bg-fog"
       }`}
     >
@@ -34,7 +34,7 @@ function RoleOption({
       />
       <span
         aria-hidden="true"
-        className={`mt-px h-5 w-5 flex-none rounded-full bg-white ${on ? "border-[6px] border-accent" : "border-2 border-[#8C929B]"}`}
+        className={`mt-px h-5 w-5 flex-none rounded-full bg-white ${on ? "border-[6px] border-primary" : "border-2 border-muted"}`}
       />
       <span className="flex flex-col gap-[3px] text-left">
         <span className="text-base font-semibold">{title}</span>
@@ -81,7 +81,7 @@ export function SignUpForm({ initialRole, next }: { initialRole: Role; next: str
           current={role}
           onPick={setRole}
           title="Para publicar mis eventos"
-          text="Llega a público nuevo y mira cuántas entradas te trae TILCA. Pagas solo por resultados."
+          text="Publica gratis y mira cuántas entradas te trae TILCA. Pagas solo el 5% de cada entrada que vendemos."
         />
       </fieldset>
 

@@ -1,72 +1,48 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { retryStellarCharge } from "@/app/panel/actions";
-import { BudgetManager } from "@/components/panel/BudgetManager";
-import { BS_PER_ATTENDEE, explorerAccountUrl, explorerTxUrl, PLATFORM_PUBLIC_KEY } from "@/lib/stellar/config";
-import { formatCount, formatLong, formatShort } from "@/lib/format";
+import { retryDeposit } from "@/app/panel/actions";
+import { DepositForm } from "@/components/panel/SalesForms";
+import { Stat } from "@/components/panel/Stat";
+import { COMISION_LABEL } from "@/lib/constants";
+import { formatBs, formatCount, formatPrice, formatShort } from "@/lib/format";
 import { requireOrganizer } from "@/lib/organizer";
-import { EVENT_COLUMNS, EVENT_PANEL_COLUMNS, type TilcaEvent } from "@/lib/types";
+import { loadSalesSummary, TX_LABELS } from "@/lib/sales";
+import { explorerAccountUrl, explorerTxUrl, PLATFORM_PUBLIC_KEY } from "@/lib/stellar/config";
+import { EVENT_PANEL_COLUMNS, type TilcaEvent } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Presupuesto y cobros en Stellar" };
+export const metadata: Metadata = { title: "Presupuesto y cobros" };
 
-interface ClickChargeRow {
-  id: number | string;
-  code: string;
-  redeemed_at: string | null;
-  created_at: string;
-  is_new_audience: boolean | null;
-  charge_status: string | null;
-  stellar_tx_hash: string | null;
-  charge_error: string | null;
-}
+const STATUS: Record<string, { label: string; tone: "ok" | "warn" | "muted" }> = {
+  sin_escrow: { label: "Sin depósito", tone: "muted" },
+  deposito_pendiente: { label: "Depósito pendiente", tone: "warn" },
+  depositando: { label: "Depositando…", tone: "muted" },
+  activo: { label: "Depósito en garantía", tone: "ok" },
+  cerrando: { label: "Cerrando…", tone: "muted" },
+  cierre_pendiente: { label: "Pendiente de cobro", tone: "warn" },
+  cerrado: { label: "Cerrado", tone: "muted" },
+  agotado: { label: "Modelo anterior", tone: "muted" },
+  reembolsado: { label: "Modelo anterior", tone: "muted" },
+};
 
-export default async function PresupuestoPage({ params }: PageProps<"/panel/evento/[id]/presupuesto">) {
+export default async function BudgetPage({ params }: PageProps<"/panel/evento/[id]/presupuesto">) {
   const { id } = await params;
-  const { supabase, organizer } = await requireOrganizer();
-
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
-
-  let event: TilcaEvent | null = null;
-  const { data: eventData, error: eventErr } = await supabase
+  const { supabase, organizer } = await requireOrganizer();
+  const { data: event } = await supabase
     .from("events")
     .select(EVENT_PANEL_COLUMNS)
     .eq("id", id)
     .eq("organizer_id", organizer.id)
     .maybeSingle<TilcaEvent>();
-
-  if (eventErr || !eventData) {
-    const { data: fallbackData } = await supabase
-      .from("events")
-      .select(EVENT_COLUMNS)
-      .eq("id", id)
-      .eq("organizer_id", organizer.id)
-      .maybeSingle<TilcaEvent>();
-    event = fallbackData;
-  } else {
-    event = eventData;
-  }
-
   if (!event) notFound();
 
-  // Cargar todos los canjes y cobros asociados al evento
-  const { data: clicksData } = await supabase
-    .from("clicks")
-    .select("id, code, redeemed_at, created_at, is_new_audience, charge_status, stellar_tx_hash, charge_error")
-    .eq("event_id", id)
-    .not("redeemed_at", "is", null)
-    .order("redeemed_at", { ascending: false });
-
-  const charges = (clicksData ?? []) as ClickChargeRow[];
-
-  const promoBudget = Number(event.promo_budget_bs ?? 0);
-  const availableBalance = Number(event.escrow_balance_bs ?? promoBudget);
-  const usedAmount = Math.max(0, promoBudget - availableBalance);
-  const usedPercent = promoBudget > 0 ? Math.min(100, Math.round((usedAmount / promoBudget) * 100)) : 0;
-  const remainingAttendees = Math.floor(availableBalance / BS_PER_ATTENDEE);
-  const maxAttendees = Math.floor(promoBudget / BS_PER_ATTENDEE);
-
-  const orgPublicKey = organizer.stellar_public_key || event.organizers?.stellar_public_key;
+  const status = event.escrow_status ?? "sin_escrow";
+  const badge = STATUS[status] ?? STATUS.sin_escrow;
+  const isPaid = Number(event.price ?? 0) > 0 && !event.source;
+  const s = await loadSalesSummary(supabase, event);
+  const orgKey = organizer.stellar_public_key ?? event.organizers?.stellar_public_key ?? null;
+  const card = "panel flex flex-col gap-4 p-5 sm:p-6";
 
   return (
     <>
@@ -81,274 +57,168 @@ export default async function PresupuestoPage({ params }: PageProps<"/panel/even
           </Link>{" "}
           <span aria-hidden="true">/</span> Presupuesto y cobros
         </nav>
-
         <div className="mt-2.5 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-condensed m-0 text-[34px] leading-none font-extrabold tracking-[-0.5px] sm:text-[40px]">
-              Presupuesto y cobros
-            </h1>
-            <p className="mt-2 mb-0 text-[15px] text-ink-2">
-              Gestión de depósitos y cobros por canje en Stellar Testnet con Trustless Work Escrow.
+            <h1 className="font-condensed m-0 text-[34px] leading-none font-extrabold tracking-[-0.5px] sm:text-[40px]">Presupuesto y cobros</h1>
+            <p className="mt-2 mb-0 max-w-[62ch] text-[15px] text-ink-2">
+              Publicar es gratis. TILCA cobra el {COMISION_LABEL} de cada entrada que vendemos con tu código, desde el depósito en
+              garantía; lo que no se usa vuelve a tu cuenta al cerrar el evento.
             </p>
           </div>
-          <BudgetManager
-            eventId={event.id}
-            currentBalance={availableBalance}
-            escrowStatus={event.escrow_status ?? "sin_escrow"}
-          />
+          {isPaid && (
+            <Link href={`/panel/evento/${event.id}/ventas`} className="btn-primary h-[38px] px-3.5 text-sm">
+              Confirmar ventas
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* Tarjeta de Resumen Escrow */}
-      <section className="panel flex flex-col gap-5 p-5 sm:p-6" aria-labelledby="h-escrow-summary">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
-          <div className="flex items-center gap-2.5">
-            <h2 id="h-escrow-summary" className="m-0 text-lg font-bold text-ink">
-              Estado del Escrow en Testnet
-            </h2>
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                event.escrow_status === "activo"
-                  ? "bg-[#EAF6EF] text-[#14532D]"
-                  : event.escrow_status === "agotado"
-                    ? "bg-[#FEF6EE] text-[#B43403]"
-                    : "bg-fog text-ink-2"
-              }`}
-            >
-              <span
-                aria-hidden="true"
-                className={`h-2 w-2 rounded-full ${
-                  event.escrow_status === "activo" ? "bg-ok animate-pulse" : "bg-ink-3"
-                }`}
-              />
-              {event.escrow_status === "activo"
-                ? "Escrow Activo"
-                : event.escrow_status === "agotado"
-                  ? "Presupuesto Agotado"
-                  : event.escrow_status === "reembolsado"
-                    ? "Cerrado y Reembolsado"
-                    : "Sin Escrow"}
-            </span>
-          </div>
-
-          {event.stellar_escrow_id && (
-            <span className="font-mono text-xs text-ink-2 bg-fog px-2.5 py-1 rounded-[6px]">
-              ID: {event.stellar_escrow_id}
-            </span>
-          )}
-        </div>
-
-        {/* Cifras clave: Depositado, Usado, Disponible */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-[10px] bg-fog p-4">
-            <span className="text-[13px] font-medium text-ink-2">Total depositado</span>
-            <div className="font-condensed mt-1 text-[32px] font-bold text-ink tabular">
-              Bs {formatCount(promoBudget)}
-            </div>
-            <span className="text-xs text-ink-3">Hasta {maxAttendees} asistentes nuevos</span>
-          </div>
-
-          <div className="rounded-[10px] bg-fog p-4">
-            <span className="text-[13px] font-medium text-ink-2">Usado en canjes</span>
-            <div className="font-condensed mt-1 text-[32px] font-bold text-accent tabular">
-              Bs {formatCount(usedAmount)}
-            </div>
-            <span className="text-xs text-ink-3">
-              {charges.filter((c) => c.is_new_audience && c.charge_status === "cobrado").length} canjes liquidados
-            </span>
-          </div>
-
-          <div className="rounded-[10px] bg-fog p-4 border border-accent/20">
-            <span className="text-[13px] font-medium text-ink-2">Disponible en Escrow</span>
-            <div className="font-condensed mt-1 text-[32px] font-bold text-ok tabular">
-              Bs {formatCount(availableBalance)}
-            </div>
-            <span className="text-xs text-ink-2 font-medium">Alcanza para {remainingAttendees} asistentes más</span>
-          </div>
-        </div>
-
-        {/* Barra de progreso */}
-        <div className="flex flex-col gap-2 pt-2">
-          <div className="flex justify-between text-xs text-ink-2">
-            <span>Progreso del presupuesto consumido</span>
-            <span className="font-semibold text-ink">{usedPercent}% utilizado</span>
-          </div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-fog">
-            <div
-              className="h-full rounded-full bg-accent transition-all duration-500 ease-out"
-              style={{ width: `${usedPercent}%` }}
-              role="progressbar"
-              aria-valuenow={usedPercent}
-              aria-valuemin={0}
-              aria-valuemax={100}
+      {!isPaid ? (
+        <section className={card}>
+          <p className="m-0 text-[15px] text-ink-2">
+            {event.source
+              ? "Los eventos importados de una ticketera no tienen depósito ni cobro."
+              : "Los eventos gratis no tienen depósito ni cobro."}
+          </p>
+        </section>
+      ) : (
+        <>
+          <section aria-label="Resumen" className="panel grid grid-cols-2 gap-px overflow-hidden bg-line lg:grid-cols-4">
+            <Stat label="Depositado" value={formatBs(s.deposited)} note={`En el escrow hoy: ${formatBs(s.balance)}`} />
+            <Stat label="Ventas confirmadas con código TILCA" value={formatCount(s.total)} note={`a ${formatPrice(event.price)} cada una`} />
+            <Stat label={`Comisión (${COMISION_LABEL})`} value={formatBs(status === "cerrado" ? s.paidCommission : s.commission)} note={status === "cerrado" ? "Pagada a TILCA" : "Se paga al cerrar"} />
+            <Stat
+              label="Devuelto"
+              value={formatBs(s.refunded)}
+              note={status === "cerrado" ? "Volvió a tu cuenta" : `Al cerrar: ${formatBs(s.refund)}`}
             />
-          </div>
-        </div>
+          </section>
 
-        {/* Datos técnicos de la red para el jurado */}
-        <div className="mt-2 rounded-[8px] border border-line bg-surface p-3.5 text-xs text-ink-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <strong className="text-ink">Cuenta del organizador (Testnet):</strong>{" "}
-            {orgPublicKey ? (
-              <a
-                href={explorerAccountUrl(orgPublicKey)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-accent hover:underline break-all"
+          <section className={card} aria-labelledby="h-escrow">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="h-escrow" className="m-0 text-base font-semibold">
+                Depósito en garantía
+              </h2>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  badge.tone === "ok" ? "bg-primary-soft text-primary" : badge.tone === "warn" ? "bg-warning-bg text-warning-text" : "bg-fog text-ink-2"
+                }`}
               >
-                {orgPublicKey} ↗
-              </a>
-            ) : (
-              <span className="text-ink-3">Generándose automáticamente</span>
+                {badge.label}
+              </span>
+            </div>
+
+            {status === "deposito_pendiente" && (
+              <div className="flex flex-col gap-3">
+                <p role="alert" className="m-0 rounded-control border border-warn-line bg-warn-bg px-3.5 py-3 text-sm text-warn-ink">
+                  El depósito de {formatBs(event.promo_budget_bs)} no llegó al escrow{event.escrow_error ? ` (${event.escrow_error})` : ""}.
+                  Tu evento sigue publicado.
+                </p>
+                <form action={retryDeposit}>
+                  <input type="hidden" name="event_id" value={event.id} />
+                  <button type="submit" className="btn-secondary h-11 px-4 text-[15px]">
+                    Reintentar el depósito
+                  </button>
+                </form>
+              </div>
             )}
-          </div>
-          <div>
-            <strong className="text-ink">Cuenta TILCA:</strong>{" "}
-            <a
-              href={explorerAccountUrl(PLATFORM_PUBLIC_KEY)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-accent hover:underline"
-            >
-              {PLATFORM_PUBLIC_KEY.slice(0, 6)}...{PLATFORM_PUBLIC_KEY.slice(-6)} ↗
-            </a>
-          </div>
-        </div>
-      </section>
 
-      {/* Lista de cobros por código canjeado */}
-      <section className="panel flex flex-col gap-4 p-5 sm:p-6" aria-labelledby="h-cobros">
-        <div className="flex items-baseline justify-between gap-3">
-          <div>
-            <h2 id="h-cobros" className="m-0 text-base font-semibold text-ink">
-              Historial de cobros por canje
+            {(status === "activo" || status === "sin_escrow") && (
+              <div className="flex flex-col gap-2">
+                <p className="m-0 text-sm text-ink-2">
+                  {s.missing > 0
+                    ? `Tu depósito no alcanza para la comisión de lo confirmado: faltan ${formatBs(s.missing)}.`
+                    : status === "sin_escrow"
+                      ? "Este evento todavía no tiene depósito."
+                      : "¿Esperas vender más? Agrega un depósito."}
+                </p>
+                <DepositForm eventId={event.id} suggested={s.missing || undefined} label={status === "sin_escrow" ? "Depositar" : "Agregar depósito"} />
+              </div>
+            )}
+
+            {status === "cierre_pendiente" && (
+              <p role="alert" className="m-0 rounded-control border border-warn-line bg-warn-bg px-3.5 py-3 text-sm text-warn-ink">
+                El cierre quedó pendiente de cobro.{" "}
+                <Link href={`/panel/evento/${event.id}/ventas`} className="link-underline font-semibold">
+                  Reintentar desde Confirmar ventas
+                </Link>
+              </p>
+            )}
+
+            <dl className="m-0 grid gap-x-4 gap-y-1.5 text-xs text-ink-2 sm:grid-cols-[max-content_1fr]">
+              <dt className="font-semibold text-ink">Escrow del evento</dt>
+              <dd className="m-0 break-all">
+                {event.escrow_account ? (
+                  <a href={explorerAccountUrl(event.escrow_account)} target="_blank" rel="noopener noreferrer" className="font-mono text-primary hover:underline">
+                    {event.escrow_account} ↗
+                  </a>
+                ) : (
+                  "Se crea con el primer depósito."
+                )}
+              </dd>
+              <dt className="font-semibold text-ink">Tu cuenta</dt>
+              <dd className="m-0 break-all">
+                {orgKey ? (
+                  <a href={explorerAccountUrl(orgKey)} target="_blank" rel="noopener noreferrer" className="font-mono text-primary hover:underline">
+                    {orgKey} ↗
+                  </a>
+                ) : (
+                  "Se crea con el primer depósito."
+                )}
+              </dd>
+              <dt className="font-semibold text-ink">Cuenta TILCA</dt>
+              <dd className="m-0 break-all">
+                {PLATFORM_PUBLIC_KEY ? (
+                  <a href={explorerAccountUrl(PLATFORM_PUBLIC_KEY)} target="_blank" rel="noopener noreferrer" className="font-mono text-primary hover:underline">
+                    {PLATFORM_PUBLIC_KEY} ↗
+                  </a>
+                ) : (
+                  "Sin configurar"
+                )}
+              </dd>
+            </dl>
+            <p className="m-0 text-xs text-ink-3">Stellar Testnet. 1 Bs se representa con 1 XLM de prueba.</p>
+          </section>
+
+          <section className={card} aria-labelledby="h-comprobantes">
+            <h2 id="h-comprobantes" className="m-0 text-base font-semibold">
+              Comprobantes
             </h2>
-            <p className="mt-1 mb-0 text-sm text-ink-2">
-              Cada canje de público nuevo libera Bs 5 del Escrow hacia la cuenta de TILCA.
-            </p>
-          </div>
-          <span className="text-xs text-ink-2">
-            {charges.length} {charges.length === 1 ? "canje registrado" : "canjes registrados"}
-          </span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[650px] border-collapse text-sm tabular">
-            <thead>
-              <tr className="border-b border-line text-left text-[13px] text-ink-2">
-                <th scope="col" className="py-2.5 pr-4 font-medium">Fecha y hora</th>
-                <th scope="col" className="py-2.5 pr-4 font-medium">Código</th>
-                <th scope="col" className="py-2.5 pr-4 font-medium">Audiencia</th>
-                <th scope="col" className="py-2.5 pr-4 font-medium">Monto</th>
-                <th scope="col" className="py-2.5 pr-4 font-medium">Estado</th>
-                <th scope="col" className="py-2.5 text-right font-medium">Comprobante Stellar</th>
-              </tr>
-            </thead>
-            <tbody>
-              {charges.map((c) => {
-                const isNew = c.is_new_audience !== false;
-                const isCharged = c.charge_status === "cobrado";
-                const isPending = c.charge_status === "pendiente";
-
-                return (
-                  <tr key={c.id} className="border-t border-line hover:bg-fog/40 transition-colors">
-                    <td className="py-3 pr-4 text-ink-2">
-                      {c.redeemed_at ? formatLong(c.redeemed_at) : formatShort(c.created_at)}
-                    </td>
-                    <td className="py-3 pr-4 font-mono font-semibold text-ink">
-                      {c.code}
-                    </td>
-                    <td className="py-3 pr-4">
-                      {isNew ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent">
-                          ★ Público nuevo
-                        </span>
-                      ) : (
-                        <span className="text-xs text-ink-3">Ya te conocía (sin cobro)</span>
-                      )}
-                    </td>
-                    <td className="py-3 pr-4 font-semibold text-ink">
-                      {isNew ? `Bs ${BS_PER_ATTENDEE}.00` : "Bs 0.00"}
-                    </td>
-                    <td className="py-3 pr-4">
-                      {isCharged && (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF6EF] px-2.5 py-0.5 text-xs font-semibold text-[#14532D]">
-                          <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-ok" />
-                          Cobrado en Stellar
-                        </span>
-                      )}
-                      {isPending && (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FEF6EE] px-2.5 py-0.5 text-xs font-semibold text-[#B43403]">
-                            <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-warn animate-pulse" />
-                            Cobro pendiente
-                          </span>
-                          <form action={retryStellarCharge}>
-                            <input type="hidden" name="click_id" value={c.id} />
-                            <button
-                              type="submit"
-                              className="text-xs font-semibold text-accent hover:underline cursor-pointer"
-                            >
-                              Reintentar
-                            </button>
-                          </form>
-                        </div>
-                      )}
-                      {!isCharged && !isPending && !isNew && (
-                        <span className="text-xs text-ink-3">No aplica</span>
-                      )}
-                      {!isCharged && !isPending && isNew && (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-ink-2">
-                            Pendiente
-                          </span>
-                          <form action={retryStellarCharge}>
-                            <input type="hidden" name="click_id" value={c.id} />
-                            <button
-                              type="submit"
-                              className="text-xs font-semibold text-accent hover:underline cursor-pointer"
-                            >
-                              Cobrar
-                            </button>
-                          </form>
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3 text-right">
-                      {c.stellar_tx_hash ? (
-                        <a
-                          href={explorerTxUrl(c.stellar_tx_hash)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="link-underline inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent-hover"
-                          title="Ver transacción en Stellar Expert"
-                        >
-                          Ver comprobante
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                            <polyline points="15 3 21 3 21 9" />
-                            <line x1="10" y1="14" x2="21" y2="3" />
-                          </svg>
-                        </a>
-                      ) : (
-                        <span className="text-xs text-ink-3">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-
-              {!charges.length && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-sm text-ink-2">
-                    Todavía no hay canjes registrados para este evento.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+            {!s.txs.length ? (
+              <p className="m-0 text-sm text-ink-2">Todavía no hay movimientos en Stellar para este evento.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] border-collapse text-sm tabular">
+                  <thead>
+                    <tr className="text-left text-[13px] text-ink-2">
+                      <th scope="col" className="py-2 pr-4 font-medium">Fecha</th>
+                      <th scope="col" className="py-2 pr-4 font-medium">Movimiento</th>
+                      <th scope="col" className="py-2 pr-4 text-right font-medium">Monto</th>
+                      <th scope="col" className="py-2 text-right font-medium">
+                        <span className="sr-only">Comprobante</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {s.txs.map((t) => (
+                      <tr key={t.id} className="border-t border-line">
+                        <td className="py-2.5 pr-4 text-ink-2">{formatShort(t.created_at)}</td>
+                        <td className="py-2.5 pr-4 font-medium">{TX_LABELS[t.kind]}</td>
+                        <td className="py-2.5 pr-4 text-right font-semibold">{formatBs(t.amount_bs)}</td>
+                        <td className="py-2.5 text-right">
+                          <a href={explorerTxUrl(t.tx_hash)} target="_blank" rel="noopener noreferrer" className="link-underline text-xs font-semibold text-primary">
+                            Ver comprobante ↗
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
     </>
   );
 }

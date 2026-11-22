@@ -30,8 +30,8 @@ export function Simulator({ eventId }: { eventId: string }) {
         <button type="submit" name="kind" value="clics" className={btn}>
           Sumar 3 clics en comprar
         </button>
-        <button type="submit" name="kind" value="canjes" className={btn}>
-          Canjear 1 código
+        <button type="submit" name="kind" value="ventas" className={btn}>
+          Confirmar 1 venta
         </button>
       </form>
     </section>

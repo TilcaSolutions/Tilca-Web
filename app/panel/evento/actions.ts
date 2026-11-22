@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES, SALES_CHANNELS, type SalesChannel } from "@/lib/constants";
 import { requireOrganizer } from "@/lib/organizer";
+import { depositToEscrow } from "@/lib/stellar/escrow";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface EventFormState {
@@ -61,7 +62,15 @@ export async function saveEvent(_prev: EventFormState, fd: FormData): Promise<Ev
   const ticketUrl = str(fd, "ticket_url");
   const trailerUrl = str(fd, "trailer_url");
   const posterUrl = str(fd, "poster_url");
-  const promoBudget = Math.max(0, num(fd, "promo_budget_bs") ?? 0);
+  const deposit = num(fd, "promo_budget_bs");
+  const expectedSales = isFree ? null : num(fd, "expected_sales");
+  const discountCode = isFree ? "" : str(fd, "discount_code").toUpperCase().replace(/\s+/g, "");
+  const discountAmount = isFree ? null : num(fd, "discount_amount");
+  const discountUnit = str(fd, "discount_unit") === "pct" ? "pct" : "bs";
+  const salesChannels = isFree
+    ? []
+    : SALES_CHANNELS.map((c) => c.id).filter((id): id is SalesChannel => fd.getAll("sales_channels").includes(id));
+  const sellsOnline = salesChannels.includes("ticketera");
 
   // Siempre: título y categoría.
   if (!title) errors.title = "Escribe el título del evento.";
@@ -74,6 +83,13 @@ export async function saveEvent(_prev: EventFormState, fd: FormData): Promise<Ev
   if (ticketUrl && !validUrl(ticketUrl)) errors.ticket_url = "El link debe empezar con https://";
   if (trailerUrl && !validUrl(trailerUrl)) errors.trailer_url = "El link debe empezar con https://";
   if (endsAt && startsAt && endsAt < startsAt) errors.end_date = "La fecha de cierre debe ser después del inicio.";
+  if (discountCode && !/^[A-Z0-9][A-Z0-9_-]{1,29}$/.test(discountCode)) {
+    errors.discount_code = "Usa solo letras, números y guiones, como TILCA10.";
+  }
+  if (Number.isNaN(discountAmount) || (discountAmount !== null && discountAmount <= 0)) errors.discount_amount = "Escribe un descuento válido.";
+  if (discountUnit === "pct" && discountAmount !== null && discountAmount >= 100) errors.discount_amount = "El descuento debe ser menor a 100%.";
+  if (Number.isNaN(expectedSales) || (expectedSales !== null && expectedSales < 0)) errors.expected_sales = "Escribe un número de entradas.";
+  if (Number.isNaN(deposit) || (deposit !== null && deposit < 0)) errors.promo_budget_bs = "Escribe un monto válido.";
 
   // Para publicar: lo que necesita el mapa y la ficha.
   if (intent === "publicado") {
@@ -81,7 +97,28 @@ export async function saveEvent(_prev: EventFormState, fd: FormData): Promise<Ev
     if (!str(fd, "venue_name")) errors.venue_name = "Escribe el nombre del lugar.";
     if (lat === null || lng === null) errors.location = "Marca el lugar en el mapa.";
     if (price === null) errors.price = "Escribe el precio o marca que es gratis.";
-    if (!ticketUrl && !isFree) errors.ticket_url = "Pega el link donde se compran las entradas.";
+  }
+
+  // Lo que ya está guardado: si es importado de una ticketera y el estado de su escrow.
+  const { data: current } = id
+    ? await supabase
+        .from("events")
+        .select("promo_budget_bs, escrow_status, source, source_url")
+        .eq("id", id)
+        .eq("organizer_id", organizer.id)
+        .maybeSingle()
+    : { data: null };
+  const importedFrom: string | null = current?.source ?? null;
+  const importedUrl: string | null = current?.source_url ?? null;
+
+  // Eventos de pago publicados por el organizador: código TILCA y dónde vende.
+  // (Los importados de una ticketera no tienen código: el organizador no está en TILCA.)
+  if (intent === "publicado" && !isFree && !importedFrom) {
+    if (!discountCode) errors.discount_code = "Escribe el código de descuento que creaste en tu ticketera.";
+    if (!salesChannels.length) errors.sales_channels = "Marca al menos un lugar donde vendes.";
+  }
+  if (intent === "publicado" && !isFree && (sellsOnline || importedFrom) && !ticketUrl) {
+    errors.ticket_url = "Pega el link donde se compran las entradas.";
   }
 
   if (Object.keys(errors).length) {
@@ -110,59 +147,40 @@ export async function saveEvent(_prev: EventFormState, fd: FormData): Promise<Ev
     poster_url: posterUrl || null,
     ticket_url: ticketUrl || null,
     trailer_url: trailerUrl || null,
+    discount_code: discountCode || null,
+    discount_amount: discountCode ? discountAmount : null,
+    discount_unit: discountCode && discountAmount !== null ? discountUnit : null,
+    sales_channels: salesChannels,
+    expected_sales: expectedSales,
   };
-
-  // Presupuesto: al editar se conserva lo ya usado en cobros y el escrow existente.
-  let budget: Record<string, unknown>;
-  let importedFrom: string | null = null;
-  let importedUrl: string | null = null;
-  if (id) {
-    const { data: current } = await supabase
-      .from("events")
-      .select("promo_budget_bs, escrow_balance_bs, escrow_status, stellar_escrow_id, source, source_url")
-      .eq("id", id)
-      .eq("organizer_id", organizer.id)
-      .maybeSingle();
-    importedFrom = current?.source ?? null;
-    importedUrl = current?.source_url ?? null;
-    const oldBudget = Number(current?.promo_budget_bs ?? 0);
-    const used = Math.max(0, oldBudget - Number(current?.escrow_balance_bs ?? 0));
-    const closed = current?.escrow_status === "reembolsado" || current?.escrow_status === "cerrado";
-    if (closed && promoBudget !== oldBudget) {
-      return { errors: { promo_budget_bs: "La promoción de este evento ya se cerró." }, message: "Revisa los campos marcados." };
-    }
-    if (promoBudget < used) {
-      return {
-        errors: { promo_budget_bs: `Ya se usaron Bs ${used} en cobros; el presupuesto no puede ser menor.` },
-        message: "Revisa los campos marcados.",
-      };
-    }
-    const balance = promoBudget - used;
-    budget = closed
-      ? {}
-      : {
-          promo_budget_bs: promoBudget,
-          escrow_balance_bs: balance,
-          escrow_status: promoBudget === 0 ? "sin_escrow" : balance > 0 ? "activo" : "agotado",
-          stellar_escrow_id: current?.stellar_escrow_id ?? (promoBudget > 0 ? newEscrowId() : null),
-        };
-  } else {
-    budget = {
-      promo_budget_bs: promoBudget,
-      escrow_balance_bs: promoBudget,
-      escrow_status: promoBudget > 0 ? "activo" : "sin_escrow",
-      stellar_escrow_id: promoBudget > 0 ? newEscrowId() : null,
-    };
-  }
 
   // Al publicar un evento importado, el equipo ya revisó lo que faltaba.
   const reviewed = importedFrom && intent === "publicado" ? { import_notes: null } : {};
 
   const res = id
-    ? await supabase.from("events").update({ ...row, ...budget, ...reviewed }).eq("id", id).eq("organizer_id", organizer.id).select("id").single()
-    : await supabase.from("events").insert({ ...row, ...budget }).select("id").single();
+    ? await supabase.from("events").update({ ...row, ...reviewed }).eq("id", id).eq("organizer_id", organizer.id).select("id").single()
+    : await supabase.from("events").insert(row).select("id").single();
   if (res.error || !res.data) {
     return { message: "No pudimos guardar el evento. Inténtalo de nuevo." };
+  }
+  const eventId = res.data.id as string;
+
+  // Depósito en el escrow. Lo escribe el servidor: el navegador no puede tocar esas columnas.
+  // Mientras no haya un depósito hecho, el monto se puede cambiar; después, solo se agrega.
+  let depositFailed = false;
+  const status = current?.escrow_status ?? "sin_escrow";
+  if (!isFree && !importedFrom && (status === "sin_escrow" || status === "deposito_pendiente")) {
+    const amount = Math.round((deposit ?? 0) * 100) / 100;
+    const nextStatus = amount > 0 && intent === "publicado" ? "deposito_pendiente" : "sin_escrow";
+    await createAdminClient()
+      .from("events")
+      .update({ promo_budget_bs: amount, escrow_status: nextStatus })
+      .eq("id", eventId)
+      .eq("organizer_id", organizer.id);
+    if (nextStatus === "deposito_pendiente") {
+      const outcome = await depositToEscrow({ eventId, organizerId: organizer.id, initial: true });
+      depositFailed = !outcome.ok;
+    }
   }
 
   if (importedFrom && intent === "publicado" && lat !== null && lng !== null && row.venue_name) {
@@ -188,11 +206,11 @@ export async function saveEvent(_prev: EventFormState, fd: FormData): Promise<Ev
   }
 
   revalidatePath("/", "layout");
-  redirect(intent === "publicado" ? `/panel/evento/${res.data.id}?publicado=1` : "/panel?tab=borradores");
-}
-
-function newEscrowId() {
-  return `TW-ESCROW-${Date.now().toString(36).toUpperCase()}`;
+  redirect(
+    intent === "publicado"
+      ? `/panel/evento/${eventId}?publicado=1${depositFailed ? "&deposito=pendiente" : ""}`
+      : "/panel?tab=borradores",
+  );
 }
 
 /**

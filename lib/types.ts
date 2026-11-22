@@ -1,8 +1,16 @@
-import type { Category } from "./constants";
+import type { Category, SalesChannel } from "./constants";
 
 export type EventStatus = "borrador" | "publicado";
-export type EscrowStatus = "sin_escrow" | "activo" | "agotado" | "cerrado" | "reembolsado";
-export type ChargeStatus = "no_aplica" | "pendiente" | "cobrado" | "fallido";
+export type EscrowStatus =
+  | "sin_escrow"
+  | "deposito_pendiente"
+  | "depositando"
+  | "activo"
+  | "cerrando"
+  | "cierre_pendiente"
+  | "cerrado"
+  | "agotado" // modelo anterior
+  | "reembolsado"; // modelo anterior
 
 export interface TilcaEvent {
   id: string;
@@ -29,10 +37,22 @@ export interface TilcaEvent {
   ticket_url: string | null;
   trailer_url: string | null;
   published_at: string | null;
+  /** Código de descuento que el organizador creó en su ticketera (ej. TILCA10). */
+  discount_code: string | null;
+  discount_amount: number | null;
+  discount_unit: "bs" | "pct" | null;
+  sales_channels: SalesChannel[];
+  expected_sales: number | null;
+  /** Depósito en el escrow (lo planeado al publicar más los depósitos adicionales). */
   promo_budget_bs?: number;
-  stellar_escrow_id?: string | null;
   escrow_status?: EscrowStatus;
+  /** Lo que hay hoy en el escrow. */
   escrow_balance_bs?: number;
+  escrow_account?: string | null;
+  commission_bs?: number | null;
+  refund_bs?: number | null;
+  escrow_error?: string | null;
+  closed_at?: string | null;
   is_sample: boolean;
   /** Ticketera de la que se importó ('superticket'); null si lo publicó un organizador. */
   source?: string | null;
@@ -54,8 +74,8 @@ export type PublicEvent = TilcaEvent & {
 
 /** Columnas públicas base (compatibles con cualquier versión del esquema) */
 export const EVENT_COLUMNS =
-  "id, organizer_id, title, category, subcategory, status, starts_at, ends_at, duration_min, venue_name, venue_address, venue_zone, lat, lng, price, presale_price, presale_until, capacity, tickets_sold, description, poster_url, ticket_url, trailer_url, published_at, is_sample, source, created_at, organizers(name)";
+  "id, organizer_id, title, category, subcategory, status, starts_at, ends_at, duration_min, venue_name, venue_address, venue_zone, lat, lng, price, presale_price, presale_until, capacity, tickets_sold, description, poster_url, ticket_url, trailer_url, published_at, discount_code, discount_amount, discount_unit, sales_channels, expected_sales, is_sample, source, created_at, organizers(name)";
 
 /** Columnas completas con integración de Stellar Escrow para el panel */
 export const EVENT_PANEL_COLUMNS =
-  "id, organizer_id, title, category, subcategory, status, starts_at, ends_at, duration_min, venue_name, venue_address, venue_zone, lat, lng, price, presale_price, presale_until, capacity, tickets_sold, description, poster_url, ticket_url, trailer_url, published_at, promo_budget_bs, stellar_escrow_id, escrow_status, escrow_balance_bs, is_sample, source, created_at, organizers(name, stellar_public_key)";
+  "id, organizer_id, title, category, subcategory, status, starts_at, ends_at, duration_min, venue_name, venue_address, venue_zone, lat, lng, price, presale_price, presale_until, capacity, tickets_sold, description, poster_url, ticket_url, trailer_url, published_at, discount_code, discount_amount, discount_unit, sales_channels, expected_sales, promo_budget_bs, escrow_status, escrow_balance_bs, escrow_account, commission_bs, refund_bs, escrow_error, closed_at, is_sample, source, created_at, organizers(name, stellar_public_key)";

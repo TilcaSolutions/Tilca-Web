@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireOrganizer } from "@/lib/organizer";
-import { cobrarCanje, reintentarCobro } from "@/lib/stellar/payment";
+import { formatBs } from "@/lib/format";
+import { closeEscrow, depositToEscrow } from "@/lib/stellar/escrow";
 
 /** "Destacar en la cartelera": crea una solicitud que el equipo revisa a mano. */
 export async function requestFeature(formData: FormData) {
@@ -20,122 +21,6 @@ export async function requestFeature(formData: FormData) {
   revalidatePath("/panel", "layout");
 }
 
-export interface RedeemState {
-  message?: string;
-  tone?: "ok" | "error";
-  txHash?: string;
-}
-
-const REDEEM_MESSAGES: Record<string, string> = {
-  ok: "Código canjeado.",
-  no_existe: "Ese código no existe. Revisa que esté bien escrito.",
-  otro_organizador: "Ese código es de un evento de otro organizador.",
-  ya_canjeado: "Ese código ya estaba canjeado.",
-};
-
-export async function redeemCode(_prev: RedeemState, formData: FormData): Promise<RedeemState> {
-  const code = String(formData.get("code") ?? "").trim();
-  const isNew = formData.get("is_new") === "on";
-  if (!code) return { message: "Escribe un código.", tone: "error" };
-  const { supabase, organizer } = await requireOrganizer();
-  const { data, error } = await supabase.rpc("redeem_code", { p_code: code, p_new_audience: isNew });
-  if (error) return { message: "No pudimos canjear el código. Inténtalo de nuevo.", tone: "error" };
-
-  let txHash: string | undefined;
-  let chargeNote = "";
-
-  // Canje hecho: cobramos en Stellar Testnet. Si falla, el canje igual vale y el cobro queda pendiente.
-  if (data === "ok" && isNew) {
-    const clickId = await clickIdForCode(supabase, code);
-    if (clickId !== null) {
-      const charge = await cobrarCanje({ clickId, organizerId: organizer.id });
-      txHash = charge.txHash;
-      if (charge.status === "pendiente") chargeNote = " El cobro en Stellar quedó pendiente; puedes reintentarlo en Presupuesto.";
-    }
-  }
-
-  revalidatePath("/panel", "layout");
-  return {
-    message: (REDEEM_MESSAGES[data as string] ?? "Listo.") + chargeNote,
-    tone: data === "ok" ? "ok" : "error",
-    txHash,
-  };
-}
-
-export async function unredeemCode(formData: FormData) {
-  const code = String(formData.get("code") ?? "");
-  const { supabase } = await requireOrganizer();
-  await supabase.rpc("unredeem_code", { p_code: code });
-  revalidatePath("/panel", "layout");
-}
-
-/** El código normalizado como lo guarda `record_click` ("tilca-8kdd" -> "TILCA-8KDD"). */
-function normalizeCode(code: string) {
-  const norm = code.toUpperCase().replace(/\s/g, "");
-  return norm.startsWith("TILCA-") ? norm : `TILCA-${norm}`;
-}
-
-async function clickIdForCode(supabase: Awaited<ReturnType<typeof requireOrganizer>>["supabase"], code: string) {
-  const { data } = await supabase.from("clicks").select("id").eq("code", normalizeCode(code)).maybeSingle();
-  return data ? Number(data.id) : null;
-}
-
-export interface CsvState {
-  message?: string;
-  tone?: "ok" | "error";
-}
-
-/**
- * CSV con los códigos usados. Acepta una columna con el código y, opcional,
- * una columna "nuevo" (sí/no, 1/0, true/false). Separador coma o punto y coma.
- */
-export async function importCsv(_prev: CsvState, formData: FormData): Promise<CsvState> {
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { message: "Elige un archivo CSV.", tone: "error" };
-  if (file.size > 1_000_000) return { message: "El archivo es muy grande (máximo 1 MB).", tone: "error" };
-
-  const text = await file.text();
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-  const rows = lines.map((l) => l.split(/[;,\t]/).map((c) => c.trim().replace(/^"|"$/g, "")));
-  const header = rows[0]?.map((h) => h.toLowerCase()) ?? [];
-  const hasHeader = header.some((h) => /codigo|código|code|nuevo|new/.test(h));
-  const codeIdx = hasHeader ? Math.max(0, header.findIndex((h) => /codigo|código|code/.test(h))) : 0;
-  const newIdx = hasHeader ? header.findIndex((h) => /nuevo|new/.test(h)) : rows[0]?.length > 1 ? 1 : -1;
-  const body = hasHeader ? rows.slice(1) : rows;
-
-  const { supabase, organizer } = await requireOrganizer();
-  const counts: Record<string, number> = {};
-  const toCharge: number[] = [];
-  for (const r of body.slice(0, 2000)) {
-    const code = r[codeIdx];
-    if (!code) continue;
-    const isNew = newIdx >= 0 && /^(s[ií]|si|1|true|x|nuevo|yes)$/i.test(r[newIdx] ?? "");
-    const { data } = await supabase.rpc("redeem_code", { p_code: code, p_new_audience: isNew });
-    const key = (data as string) ?? "error";
-    counts[key] = (counts[key] ?? 0) + 1;
-
-    if (data === "ok" && isNew) {
-      const clickId = await clickIdForCode(supabase, code);
-      if (clickId !== null) toCharge.push(clickId);
-    }
-  }
-
-  // Cobros uno por uno: en paralelo, las transacciones de la misma cuenta chocan por el número de secuencia.
-  let pending = 0;
-  for (const clickId of toCharge) {
-    const charge = await cobrarCanje({ clickId, organizerId: organizer.id });
-    if (charge.status === "pendiente") pending++;
-  }
-  revalidatePath("/panel", "layout");
-
-  const parts = [`${counts.ok ?? 0} canjeados`];
-  if (counts.ya_canjeado) parts.push(`${counts.ya_canjeado} ya estaban canjeados`);
-  if (counts.no_existe) parts.push(`${counts.no_existe} no existen`);
-  if (counts.otro_organizador) parts.push(`${counts.otro_organizador} son de otro organizador`);
-  if (pending) parts.push(`${pending} cobros en Stellar quedaron pendientes`);
-  return { message: `${parts.join(", ")}.`, tone: counts.ok ? "ok" : "error" };
-}
-
 /** Total de entradas vendidas que reporta el organizador (incluye las que no vinieron de TILCA). */
 export async function updateTicketsSold(formData: FormData) {
   const eventId = String(formData.get("event_id") ?? "");
@@ -145,54 +30,118 @@ export async function updateTicketsSold(formData: FormData) {
   revalidatePath("/panel", "layout");
 }
 
-/** Reintenta un cobro fallido o pendiente en Stellar Testnet */
-export async function retryStellarCharge(formData: FormData) {
-  const clickId = String(formData.get("click_id") ?? "");
-  const { organizer } = await requireOrganizer();
-  await reintentarCobro(clickId, organizer.id);
-  revalidatePath("/panel", "layout");
+// --- Confirmar ventas y cerrar el evento ------------------------------------
+
+export interface SalesState {
+  message?: string;
+  tone?: "ok" | "error";
+  missingBs?: number;
 }
 
-/** Agrega más presupuesto de promoción a un evento */
-export async function addEventBudget(formData: FormData) {
-  const eventId = String(formData.get("event_id") ?? "");
-  const amountBs = Math.max(0, Number(formData.get("amount_bs") ?? 0));
-  if (amountBs <= 0) return;
+const ID = /^[0-9a-f-]{36}$/i;
 
-  const { supabase } = await requireOrganizer();
-  const { data: event } = await supabase
+/** El evento del organizador actual (o null). */
+async function ownEvent(eventId: string) {
+  const ctx = await requireOrganizer();
+  if (!ID.test(eventId)) return { ...ctx, event: null };
+  const { data: event } = await ctx.supabase
     .from("events")
-    .select("promo_budget_bs, escrow_balance_bs")
+    .select("id, price, escrow_status")
     .eq("id", eventId)
+    .eq("organizer_id", ctx.organizer.id)
     .maybeSingle();
+  return { ...ctx, event };
+}
 
-  if (event) {
-    const newBudget = (event.promo_budget_bs ?? 0) + amountBs;
-    const newBalance = (event.escrow_balance_bs ?? 0) + amountBs;
-    await supabase
-      .from("events")
-      .update({
-        promo_budget_bs: newBudget,
-        escrow_balance_bs: newBalance,
-        escrow_status: "activo",
-      })
-      .eq("id", eventId);
-  }
+function refresh(eventId: string) {
+  revalidatePath(`/panel/evento/${eventId}`, "layout");
   revalidatePath("/panel", "layout");
 }
 
-/** Cierra el evento y reembolsa el saldo no usado de Stellar Escrow al organizador */
-export async function closeEventAndRefund(formData: FormData) {
-  const eventId = String(formData.get("event_id") ?? "");
-  const { supabase } = await requireOrganizer();
+/** Ventas por ticketera: cuántas entradas se vendieron con el código (con respaldo opcional). */
+export async function confirmTicketSales(_prev: SalesState, fd: FormData): Promise<SalesState> {
+  const eventId = String(fd.get("event_id") ?? "");
+  const quantity = Math.floor(Number(String(fd.get("quantity") ?? "").replace(",", ".")));
+  const evidence = String(fd.get("evidence_path") ?? "") || null;
+  if (!Number.isFinite(quantity) || quantity < 1 || quantity > 100000) {
+    return { message: "Escribe cuántas entradas se vendieron con el código.", tone: "error" };
+  }
+  const { supabase, user, event } = await ownEvent(eventId);
+  if (!event) return { message: "No encontramos ese evento.", tone: "error" };
+  // El respaldo tiene que estar en la carpeta del usuario (el bucket ya lo exige al subir).
+  if (evidence && !evidence.startsWith(`${user.id}/`)) return { message: "El respaldo no es válido.", tone: "error" };
+  const { error } = await supabase
+    .from("sales_confirmations")
+    .insert({ event_id: eventId, source: "ticketera", quantity, evidence_path: evidence });
+  if (error) return { message: "No pudimos guardar la confirmación. ¿El evento ya está cerrado?", tone: "error" };
+  refresh(eventId);
+  return { message: `Listo: ${quantity} ${quantity === 1 ? "entrada confirmada" : "entradas confirmadas"}.`, tone: "ok" };
+}
 
-  await supabase
-    .from("events")
-    .update({
-      escrow_status: "reembolsado",
-      escrow_balance_bs: 0,
-    })
-    .eq("id", eventId);
+/** "+1 vino por TILCA": una venta por QR o en puerta. */
+export async function addDoorSale(fd: FormData) {
+  const eventId = String(fd.get("event_id") ?? "");
+  const { supabase, event } = await ownEvent(eventId);
+  if (!event) return;
+  await supabase.from("sales_confirmations").insert({ event_id: eventId, source: "puerta", quantity: 1 });
+  refresh(eventId);
+}
 
-  revalidatePath("/panel", "layout");
+/** Borra una confirmación (para corregir antes del cierre). */
+export async function deleteSale(fd: FormData) {
+  const eventId = String(fd.get("event_id") ?? "");
+  const saleId = Number(fd.get("sale_id"));
+  const { supabase, event } = await ownEvent(eventId);
+  if (!event || !Number.isInteger(saleId)) return;
+  const { data: row } = await supabase
+    .from("sales_confirmations")
+    .delete()
+    .eq("id", saleId)
+    .eq("event_id", eventId)
+    .select("evidence_path")
+    .maybeSingle();
+  if (row?.evidence_path) await supabase.storage.from("respaldos").remove([row.evidence_path]);
+  refresh(eventId);
+}
+
+/** Cierra el evento: paga la comisión a TILCA y devuelve el resto del depósito. */
+export async function closeEvent(_prev: SalesState, fd: FormData): Promise<SalesState> {
+  const eventId = String(fd.get("event_id") ?? "");
+  const { organizer, event } = await ownEvent(eventId);
+  if (!event) return { message: "No encontramos ese evento.", tone: "error" };
+  const outcome = await closeEscrow({ eventId, organizerId: organizer.id });
+  refresh(eventId);
+  if (outcome.ok) return { message: "Evento cerrado. Los comprobantes ya están en Stellar.", tone: "ok" };
+  if (outcome.reason === "no_alcanza") {
+    return { message: `Tu depósito no alcanza: faltan ${formatBs(outcome.missingBs)}.`, tone: "error", missingBs: outcome.missingBs };
+  }
+  if (outcome.reason === "stellar") {
+    return { message: "Stellar no respondió. El cierre quedó pendiente de cobro: puedes reintentarlo.", tone: "error" };
+  }
+  return { message: outcome.message, tone: "error" };
+}
+
+/** Depósito adicional (o el primero, si el evento no tenía). */
+export async function addDeposit(_prev: SalesState, fd: FormData): Promise<SalesState> {
+  const eventId = String(fd.get("event_id") ?? "");
+  const amount = Math.round(Number(String(fd.get("amount_bs") ?? "").replace(",", ".")) * 100) / 100;
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 1_000_000) return { message: "Escribe un monto válido.", tone: "error" };
+  const { organizer, event } = await ownEvent(eventId);
+  if (!event) return { message: "No encontramos ese evento.", tone: "error" };
+  const outcome = await depositToEscrow({ eventId, organizerId: organizer.id, amountBs: amount, initial: false });
+  refresh(eventId);
+  if (outcome.ok) return { message: `Depositaste ${formatBs(amount)} en el escrow.`, tone: "ok" };
+  return {
+    message: outcome.reason === "stellar" ? "Stellar no respondió. Intenta el depósito de nuevo en un momento." : outcome.message,
+    tone: "error",
+  };
+}
+
+/** Reintenta el depósito de la publicación que no llegó a Stellar. */
+export async function retryDeposit(fd: FormData) {
+  const eventId = String(fd.get("event_id") ?? "");
+  const { organizer, event } = await ownEvent(eventId);
+  if (!event) return;
+  await depositToEscrow({ eventId, organizerId: organizer.id, initial: true });
+  refresh(eventId);
 }

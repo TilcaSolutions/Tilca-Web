@@ -1,18 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { unredeemCode, updateTicketsSold } from "@/app/panel/actions";
-import { CodesManager } from "@/components/panel/CodesManager";
+import { updateTicketsSold } from "@/app/panel/actions";
 import { Simulator } from "@/components/panel/Simulator";
 import { FeatureButton } from "@/components/panel/SlowSalesAlert";
 import { TicketsChart } from "@/components/panel/TicketsChart";
 import { salesPace, weeksLabel } from "@/lib/benchmark";
-import { CHANNELS, PRICE_PER_NEW_ATTENDEE } from "@/lib/constants";
-import { formatCount, formatLong, formatPrice, formatShort, formatWeekdayDay, isPresaleActive, percent } from "@/lib/format";
+import { COMISION_LABEL, commissionFor } from "@/lib/constants";
+import { formatBs, formatCount, formatLong, formatPrice, formatWeekdayDay, isPresaleActive, percent } from "@/lib/format";
 import { requireOrganizer } from "@/lib/organizer";
-import { loadEventStats, rangeLabel, type Period, type ClickRow } from "@/lib/stats";
-import { EVENT_COLUMNS, type TilcaEvent } from "@/lib/types";
-import { explorerTxUrl } from "@/lib/stellar/config";
+import { loadEventStats, rangeLabel, type Period } from "@/lib/stats";
+import { EVENT_PANEL_COLUMNS, type TilcaEvent } from "@/lib/types";
 import { shortVenue } from "@/lib/venues";
 
 export const metadata: Metadata = { title: "Estadísticas del evento" };
@@ -26,7 +24,7 @@ export default async function EventStatsPage({ params, searchParams }: PageProps
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const { data: event } = await supabase
     .from("events")
-    .select(EVENT_COLUMNS)
+    .select(EVENT_PANEL_COLUMNS)
     .eq("id", id)
     .eq("organizer_id", organizer.id)
     .maybeSingle<TilcaEvent>();
@@ -42,6 +40,8 @@ export default async function EventStatsPage({ params, searchParams }: PageProps
   const pace = salesPace(sold, event.capacity, event.starts_at);
   const maxChannel = Math.max(...stats.channels.map((c) => c.count), 1);
   const presale = isPresaleActive(event);
+  const isPaid = Number(event.price ?? 0) > 0 && !event.source;
+  const owed = commissionFor(totals.tickets, Number(event.price ?? 0));
   const firstDay = stats.days[0]?.date;
   const lastDay = stats.days.at(-1)?.date;
 
@@ -53,16 +53,24 @@ export default async function EventStatsPage({ params, searchParams }: PageProps
   const funnel = [
     { label: "Vieron la ficha del evento", value: stats.views, rate: null as number | null },
     { label: "Hicieron clic en comprar", value: stats.clicks, rate: percent(stats.clicks, stats.views) },
-    { label: "Compraron con el código TILCA", value: stats.tickets, rate: percent(stats.tickets, stats.clicks) },
+    { label: "Ventas confirmadas con código TILCA", value: stats.tickets, rate: percent(stats.tickets, stats.clicks) },
   ];
 
   return (
     <>
       {sp.publicado === "1" && (
-        <p role="status" className="m-0 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] border border-[#B8DCC8] bg-[#EAF6EF] px-[18px] py-3 text-[15px] text-[#14532D]">
+        <p role="status" className="m-0 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] border border-primary/25 bg-primary-soft px-[18px] py-3 text-[15px] text-primary">
           <strong className="font-semibold">Tu evento ya está en el mapa.</strong>
           <Link href={`/evento/${event.id}`} className="link-underline font-semibold">
             Ver la ficha pública
+          </Link>
+        </p>
+      )}
+      {event.escrow_status === "deposito_pendiente" && (
+        <p role="alert" className="m-0 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[10px] border border-warn-line bg-warn-bg px-[18px] py-3 text-[15px] text-warn-ink">
+          <span>Tu depósito de {formatBs(event.promo_budget_bs)} todavía no llegó al escrow en Stellar. El evento ya está publicado.</span>
+          <Link href={`/panel/evento/${event.id}/presupuesto`} className="link-underline font-semibold">
+            Reintentar el depósito
           </Link>
         </p>
       )}
@@ -91,10 +99,16 @@ export default async function EventStatsPage({ params, searchParams }: PageProps
                 Desde que se publicó
               </Link>
             </div>
-            <Link href={`/panel/evento/${event.id}/presupuesto`} className="btn-secondary h-[38px] px-3.5 text-sm inline-flex items-center gap-1.5 border-accent/40 font-semibold text-accent hover:border-accent">
-              <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-              Presupuesto y cobros
-            </Link>
+            {isPaid && (
+              <>
+                <Link href={`/panel/evento/${event.id}/ventas`} className="btn-primary h-[38px] px-3.5 text-sm">
+                  Confirmar ventas
+                </Link>
+                <Link href={`/panel/evento/${event.id}/presupuesto`} className="btn-secondary h-[38px] px-3.5 text-sm">
+                  Presupuesto y cobros
+                </Link>
+              </>
+            )}
             <Link href={`/evento/${event.id}`} className="btn-secondary h-[38px] px-3.5 text-sm">
               Ver ficha pública
             </Link>
@@ -193,7 +207,7 @@ export default async function EventStatsPage({ params, searchParams }: PageProps
       <div className="flex flex-col gap-4 lg:flex-row">
         <section className="panel min-w-0 px-5 pt-5 pb-3.5 sm:px-[22px] lg:flex-[3]" aria-labelledby="h-dias">
           <h2 id="h-dias" className="m-0 text-base font-semibold">
-            Entradas vendidas por TILCA, por día
+            Ventas confirmadas con código TILCA, por día
           </h2>
           <p className="mt-1 mb-1.5 text-sm text-ink-2">
             {firstDay && lastDay ? rangeLabel(firstDay, lastDay) : ""}. {formatCount(stats.tickets)} en total.
@@ -203,48 +217,33 @@ export default async function EventStatsPage({ params, searchParams }: PageProps
 
         <section className="panel flex min-w-0 flex-col gap-3 px-5 py-5 sm:px-[22px] lg:flex-[2]" aria-labelledby="h-canales">
           <h2 id="h-canales" className="m-0 text-base font-semibold">
-            De dónde vino la gente que compró
+            De dónde vienen los clics en comprar
           </h2>
           <div className="grid grid-cols-[150px_1fr_28px] items-center gap-x-2.5 gap-y-3 text-sm tabular">
             {stats.channels.map((c) => (
               <ChannelRow key={c.id} label={c.label} count={c.count} max={maxChannel} />
             ))}
           </div>
-          <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3.5">
-            <span className="text-sm leading-[1.45] text-ink-2">
-              <strong className="font-semibold text-ink">
-                {formatCount(stats.newAudience)} de {formatCount(stats.tickets)} son público nuevo,
-              </strong>
-              <br />
-              nunca habían ido a una función tuya.
-            </span>
-            <span className="flex flex-col items-end">
-              <span className="text-[13px] text-ink-2">Pagas a TILCA</span>
-              <span className="font-condensed text-[26px] font-bold tabular">Bs {formatCount(stats.newAudience * PRICE_PER_NEW_ATTENDEE)}</span>
-              <span className="text-xs text-ink-3">
-                {stats.newAudience} × Bs {PRICE_PER_NEW_ATTENDEE}
+          {isPaid && (
+            <div className="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3.5">
+              <span className="text-sm leading-[1.45] text-ink-2">
+                <strong className="font-semibold text-ink">
+                  {formatCount(totals.tickets)} {totals.tickets === 1 ? "entrada confirmada" : "entradas confirmadas"}
+                </strong>
+                <br />
+                con el código {event.discount_code ?? "TILCA"}.
               </span>
-              <Link href={`/panel/evento/${event.id}/presupuesto`} className="mt-1 text-xs font-semibold text-accent hover:underline inline-flex items-center gap-1">
-                Ver Escrow en Stellar ↗
-              </Link>
-            </span>
-          </div>
+              <span className="flex flex-col items-end">
+                <span className="text-[13px] text-ink-2">{event.escrow_status === "cerrado" ? "Pagaste a TILCA" : "Comisión TILCA"}</span>
+                <span className="font-condensed text-[26px] font-bold tabular">{formatBs(event.escrow_status === "cerrado" ? event.commission_bs : owed)}</span>
+                <span className="text-xs text-ink-3">
+                  {totals.tickets} × {formatPrice(event.price)} × {COMISION_LABEL}
+                </span>
+              </span>
+            </div>
+          )}
         </section>
       </div>
-
-      <section className="panel flex flex-col gap-5 px-5 py-5 sm:px-[22px]" aria-labelledby="h-codigos">
-        <div>
-          <h2 id="h-codigos" className="m-0 text-base font-semibold">
-            Códigos TILCA
-          </h2>
-          <p className="mt-1 mb-0 text-sm text-ink-2">
-            Cada persona que toca “Comprar entrada” recibe un código. Cuando alguien compra con su código, márcalo aquí: así se cuentan
-            las entradas que te trajo TILCA.
-          </p>
-        </div>
-        <CodesManager />
-        <CodesTable codes={totals.codes.slice(0, 12)} total={totals.codes.length} />
-      </section>
 
       {process.env.NEXT_PUBLIC_ENABLE_SIMULATOR === "true" && event.status === "publicado" && <Simulator eventId={event.id} />}
     </>
@@ -285,87 +284,5 @@ function ChannelRow({ label, count, max }: { label: string; count: number; max: 
       </span>
       <span className="text-right font-semibold text-ink">{count}</span>
     </>
-  );
-}
-
-function CodesTable({
-  codes,
-  total,
-}: {
-  codes: ClickRow[];
-  total: number;
-}) {
-  if (!codes.length) {
-    return <p className="m-0 text-sm text-ink-2">Todavía nadie tocó “Comprar entrada” en este evento.</p>;
-  }
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[680px] border-collapse text-sm tabular">
-        <caption className="pb-2 text-left text-[13px] text-ink-2">
-          Últimos {codes.length} de {formatCount(total)} códigos generados
-        </caption>
-        <thead>
-          <tr className="text-left text-[13px] text-ink-2">
-            <th scope="col" className="py-2 pr-3 font-medium">Código</th>
-            <th scope="col" className="py-2 pr-3 font-medium">Canal</th>
-            <th scope="col" className="py-2 pr-3 font-medium">Clic</th>
-            <th scope="col" className="py-2 pr-3 font-medium">Estado</th>
-            <th scope="col" className="py-2 pr-3 font-medium">Stellar Testnet</th>
-            <th scope="col" className="py-2 font-medium">
-              <span className="sr-only">Acciones</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {codes.map((c) => (
-            <tr key={c.code} className="border-t border-line">
-              <td className="py-2 pr-3 font-semibold">
-                {c.code}
-                {c.is_sample && <span className="ml-2 text-xs font-normal text-ink-3">ejemplo</span>}
-              </td>
-              <td className="py-2 pr-3 text-ink-2">{CHANNELS.find((ch) => ch.id === c.channel)?.label ?? "Link directo"}</td>
-              <td className="py-2 pr-3 text-ink-2">{formatShort(c.created_at)}</td>
-              <td className="py-2 pr-3">
-                {c.redeemed_at ? (
-                  <span className="inline-flex items-center gap-1.5">
-                    <span aria-hidden="true" className="h-2 w-2 rounded-full bg-ok" />
-                    Canjeado{c.is_new_audience ? ", público nuevo" : ""}
-                  </span>
-                ) : (
-                  <span className="text-ink-2">Sin canjear</span>
-                )}
-              </td>
-              <td className="py-2 pr-3">
-                {c.stellar_tx_hash ? (
-                  <a
-                    href={explorerTxUrl(c.stellar_tx_hash)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="link-underline inline-flex items-center gap-1 font-semibold text-accent text-xs"
-                    title="Ver transacción en Stellar Expert"
-                  >
-                    Comprobante ↗
-                  </a>
-                ) : c.charge_status === "pendiente" ? (
-                  <span className="text-xs font-semibold text-warn">Cobro pendiente</span>
-                ) : (
-                  <span className="text-xs text-ink-3">—</span>
-                )}
-              </td>
-              <td className="py-2 text-right">
-                {c.redeemed_at && (
-                  <form action={unredeemCode}>
-                    <input type="hidden" name="code" value={c.code} />
-                    <button type="submit" className="link-underline text-[13px] font-semibold text-ink-2 hover:text-ink">
-                      Deshacer
-                    </button>
-                  </form>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }

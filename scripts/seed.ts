@@ -61,6 +61,28 @@ interface SeedEvent {
 
 const TICKETERA = "https://superticket.bo";
 
+/**
+ * Venta con código TILCA de los eventos de pago: el código de descuento que cada
+ * organizador creó en su ticketera, dónde vende y cuántas ventas espera de TILCA.
+ * Los eventos gratis no llevan código.
+ */
+const SALES: Record<string, { code: string; discount?: [number, "bs" | "pct"]; channels: string[]; expected: number }> = {
+  casa: { code: "TILCA10", discount: [10, "pct"], channels: ["ticketera", "puerta"], expected: 40 },
+  monologos: { code: "TILCA-RISAS", discount: [5, "bs"], channels: ["ticketera", "qr"], expected: 20 },
+  tren: { code: "TILCA-TREN", channels: ["ticketera"], expected: 10 },
+  jazz: { code: "TILCA-JAZZ", discount: [5, "bs"], channels: ["ticketera", "puerta"], expected: 25 },
+  morenada: { code: "TILCA-DANZA", channels: ["qr", "puerta"], expected: 30 },
+  cine: { code: "TILCA-CINE", discount: [3, "bs"], channels: ["ticketera"], expected: 15 },
+  cumbia: { code: "TILCA-CUMBIA", channels: ["ticketera", "puerta"], expected: 40 },
+  hamlet: { code: "TILCA-HAMLET", discount: [10, "pct"], channels: ["ticketera"], expected: 20 },
+  charango: { code: "TILCA-CHARANGO", channels: ["qr"], expected: 15 },
+  butoh: { code: "TILCA-BUTOH", channels: ["puerta"], expected: 10 },
+  terapia: { code: "TILCA-TERAPIA", discount: [5, "bs"], channels: ["ticketera", "qr"], expected: 25 },
+  beethoven: { code: "TILCA-SINFONICA", discount: [10, "pct"], channels: ["ticketera"], expected: 50 },
+  zorro: { code: "TILCA-ZORRO", channels: ["ticketera", "puerta"], expected: 20 },
+  electro: { code: "TILCA10", discount: [10, "pct"], channels: ["ticketera", "qr", "puerta"], expected: 35 },
+};
+
 const EVENTS: SeedEvent[] = [
   // ---- Teatro de Altura (cuenta demo) ----
   {
@@ -368,10 +390,8 @@ const METRICS: Record<
     clicks: number;
     clicksLast7: number;
     daysBack: [from: number, to: number];
-    tickets: number[] | { total: number; newCount: number };
-    newCount: number;
+    tickets: number[] | { total: number };
     channels: Record<string, number>;
-    peakChannel?: string;
   }
 > = {
   casa: {
@@ -381,9 +401,7 @@ const METRICS: Record<
     clicksLast7: 51,
     daysBack: [13, 0],
     tickets: [0, 1, 0, 2, 1, 3, 2, 1, 4, 2, 3, 5, 2, 2], // 28, pico de 5
-    newCount: 21,
     channels: { whatsapp: 12, mapa: 8, amigo: 5, busqueda: 3 },
-    peakChannel: "whatsapp",
   },
   monologos: {
     views: 310,
@@ -391,8 +409,7 @@ const METRICS: Record<
     clicks: 48,
     clicksLast7: 30,
     daysBack: [10, 0],
-    tickets: { total: 11, newCount: 8 },
-    newCount: 8,
+    tickets: { total: 11 },
     channels: { mapa: 5, whatsapp: 3, amigo: 2, busqueda: 1 },
   },
   tren: {
@@ -401,22 +418,10 @@ const METRICS: Record<
     clicks: 14,
     clicksLast7: 0,
     daysBack: [29, 9],
-    tickets: { total: 3, newCount: 2 },
-    newCount: 2,
+    tickets: { total: 3 },
     channels: { mapa: 2, amigo: 1 },
   },
 };
-
-const ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
-const usedCodes = new Set<string>();
-function newCode() {
-  let c: string;
-  do {
-    c = "TILCA-" + Array.from({ length: 4 }, () => ALPHABET[Math.floor(rand() * ALPHABET.length)]).join("");
-  } while (usedCodes.has(c));
-  usedCodes.add(c);
-  return c;
-}
 
 /** Momento al azar del día `d` (negativo = hace d días), entre las 9:00 y las 23:00, sin pasar de ahora. */
 function randomMoment(d: number) {
@@ -452,16 +457,6 @@ async function main() {
   const old = users?.users.find((u) => u.email === DEMO_EMAIL);
   if (old) await db.auth.admin.deleteUser(old.id);
 
-  // Verificar si la base de datos ya tiene aplicadas las columnas de Stellar
-  const { error: stellarCheck } = await db.from("organizers").select("stellar_public_key").limit(1);
-  const hasStellarColumns = !stellarCheck;
-  if (!hasStellarColumns) {
-    console.log("ℹ️ Nota: Las columnas de Stellar aún no están en la BD (aplícalas con 'npx supabase migration up').");
-    console.log("   Sembrando datos compatibles con el esquema actual...");
-  } else {
-    console.log("✨ Columnas de Stellar detectadas. Sembrando datos con cuentas y escrows de Testnet...");
-  }
-
   console.log("Creando la cuenta demo de Teatro de Altura…");
   const { data: created, error: userErr } = await db.auth.admin.createUser({
     email: DEMO_EMAIL,
@@ -472,7 +467,7 @@ async function main() {
   if (userErr || !created.user) throw userErr ?? new Error("No se creó el usuario demo");
   // El trigger ya creó el organizador; lo marcamos como ejemplo.
   const demoOrgUpdate: Record<string, unknown> = { is_sample: true };
-  // Sin cuenta Stellar: `npm run migrate:stellar` (o el primer cobro) crea una real en Testnet.
+  // Sin cuenta Stellar: `npm run migrate:stellar` (o el primer depósito) crea una real en Testnet.
   const { data: demoOrg, error: orgErr } = await db
     .from("organizers")
     .update(demoOrgUpdate)
@@ -520,7 +515,7 @@ async function main() {
       capacity: e.capacity ?? null,
       tickets_sold: e.ticketsSold ?? 0,
       description: e.description ?? null,
-      ticket_url: e.ticket ? TICKETERA : null,
+      ticket_url: e.ticket && (SALES[e.key]?.channels.includes("ticketera") ?? true) ? TICKETERA : null,
       sample_saves: e.saves ?? 0,
       is_sample: true,
       published_at:
@@ -529,12 +524,17 @@ async function main() {
           : null,
     };
 
-    if (hasStellarColumns) {
-      eventInsert.promo_budget_bs = e.key === "casa" ? 250 : 100;
-      // Nada cobrado todavía: los canjes de ejemplo quedan pendientes y se cobran de verdad con "Cobrar".
-      eventInsert.escrow_balance_bs = e.key === "casa" ? 250 : 100;
-      eventInsert.stellar_escrow_id = `TW-ESCROW-${e.key.toUpperCase()}`;
-      eventInsert.escrow_status = "activo";
+    const sale = (e.price ?? 0) > 0 ? SALES[e.key] : undefined;
+    if (sale) {
+      eventInsert.discount_code = sale.code;
+      eventInsert.discount_amount = sale.discount?.[0] ?? null;
+      eventInsert.discount_unit = sale.discount?.[1] ?? null;
+      eventInsert.sales_channels = sale.channels;
+      eventInsert.expected_sales = sale.expected;
+      // Depósito sugerido (ventas esperadas × precio × 5%). Sin transacciones inventadas:
+      // queda pendiente y el organizador lo deposita de verdad en Testnet desde el panel.
+      eventInsert.promo_budget_bs = Math.round(sale.expected * (e.price ?? 0) * 5) / 100;
+      eventInsert.escrow_status = status === "publicado" ? "deposito_pendiente" : "sin_escrow";
     }
 
     const { data, error } = await db
@@ -546,7 +546,7 @@ async function main() {
     eventIds.set(e.key, data.id);
   }
 
-  console.log("Creando vistas, clics y códigos canjeados…");
+  console.log("Creando vistas, clics y ventas confirmadas…");
   for (const [key, m] of Object.entries(METRICS)) {
     const eventId = eventIds.get(key)!;
     const [from, to] = m.daysBack;
@@ -570,62 +570,37 @@ async function main() {
     } else {
       for (let i = 0; i < m.tickets.total; i++) ticketDays.push(Math.round(to + rand() * (from - to)));
     }
-    const peakDay = Array.isArray(m.tickets) ? from - m.tickets.indexOf(Math.max(...m.tickets)) : null;
 
-    // Canales de las entradas: el día pico, casi todo por la cartelera de WhatsApp.
+    // Ventas confirmadas: una confirmación por día con ventas (la mayoría por ticketera,
+    // alguna marcada en puerta si el evento vende ahí).
+    const byDay = new Map<number, number>();
+    for (const d of ticketDays) byDay.set(d, (byDay.get(d) ?? 0) + 1);
+    const atDoor = SALES[key]?.channels.includes("puerta");
+    const saleRows: Record<string, unknown>[] = [];
+    for (const [d, n] of byDay) {
+      const door = atDoor && n > 1 ? 1 : 0;
+      const when = randomMoment(-d).toISOString();
+      saleRows.push({ event_id: eventId, source: "ticketera", quantity: n - door, is_sample: true, created_at: when });
+      if (door) saleRows.push({ event_id: eventId, source: "puerta", quantity: door, is_sample: true, created_at: when });
+    }
+    await insertBatches("sales_confirmations", saleRows);
+
+    // Clics en "Comprar" (sin código: el código ahora es uno por evento), respetando cuántos fueron en los últimos 7 días.
+    const clickRows: Record<string, unknown>[] = [];
+    const extraRecent = m.clicksLast7;
+    const extraOld = Math.max(0, m.clicks - extraRecent);
     const pool: string[] = Object.entries(m.channels).flatMap(([ch, n]) => Array(n).fill(ch));
-    const channelsForTickets = ticketDays.map((d) => {
-      if (peakDay !== null && d === peakDay && m.peakChannel && pool.includes(m.peakChannel)) {
-        pool.splice(pool.indexOf(m.peakChannel), 1);
-        return m.peakChannel;
-      }
-      return "";
-    });
-    channelsForTickets.forEach((c, i) => {
-      if (!c) channelsForTickets[i] = pool.splice(Math.floor(rand() * pool.length), 1)[0] ?? "mapa";
-    });
-
-    const newFlags = ticketDays.map((_, i) => i < m.newCount);
-    newFlags.sort(() => rand() - 0.5);
-
-    const clickRows: Record<string, unknown>[] = ticketDays.map((d, i) => {
-      const redeemed = randomMoment(-d);
-      const clicked = new Date(redeemed.getTime() - (10 + rand() * 120) * 60_000);
-      const row: Record<string, unknown> = {
-        event_id: eventId,
-        anon_id: "ejemplo",
-        channel: channelsForTickets[i],
-        code: newCode(),
-        created_at: clicked.toISOString(),
-        redeemed_at: redeemed.toISOString(),
-        is_new_audience: newFlags[i],
-        is_sample: true,
-      };
-
-      if (hasStellarColumns) {
-        // Sin hashes inventados: un "Ver comprobante" tiene que abrir una transacción real.
-        row.charge_status = newFlags[i] ? "pendiente" : "no_aplica";
-      }
-
-      return row;
-    });
-
-    // Clics sin compra, respetando cuántos fueron en los últimos 7 días.
-    const recentTicketClicks = clickRows.filter((c) => new Date(c.created_at as string) >= lpMidnight(NOW, -6)).length;
-    const extraRecent = Math.max(0, m.clicksLast7 - recentTicketClicks);
-    const extraOld = Math.max(0, m.clicks - clickRows.length - extraRecent);
     for (const d of [...spread(extraRecent, recentFrom, to), ...spread(extraOld, from, Math.max(to, 7))]) {
       clickRows.push({
         event_id: eventId,
         anon_id: "ejemplo",
-        channel: weightedChannel(),
-        code: newCode(),
+        channel: pool.length && rand() < 0.5 ? pool[Math.floor(rand() * pool.length)] : weightedChannel(),
         created_at: d.toISOString(),
         is_sample: true,
       });
     }
     await insertBatches("clicks", clickRows);
-    console.log(`  ${key}: ${viewDates.length} vistas, ${clickRows.length} clics, ${ticketDays.length} entradas`);
+    console.log(`  ${key}: ${viewDates.length} vistas, ${clickRows.length} clics, ${ticketDays.length} ventas confirmadas`);
   }
 
   console.log("\nListo. Cuenta demo del organizador:");

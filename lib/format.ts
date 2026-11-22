@@ -88,6 +88,19 @@ export function currentPrice(e: Pick<TilcaEvent, "price" | "presale_price" | "pr
   return isPresaleActive(e, now) ? Number(e.presale_price) : e.price === null ? null : Number(e.price);
 }
 
+/** Monto en bolivianos: 48 -> "Bs 48", 48.5 -> "Bs 48,50". */
+export function formatBs(n: number | null | undefined) {
+  const v = Number(n ?? 0);
+  const cents = Math.round(v * 100) % 100 !== 0;
+  return `Bs ${v.toLocaleString("es-BO", { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: 2 })}`;
+}
+
+/** "ahorras Bs 5" / "ahorras 10%" según el descuento del código. */
+export function discountLabel(e: Pick<TilcaEvent, "discount_amount" | "discount_unit">) {
+  if (!e.discount_amount || !e.discount_unit) return null;
+  return e.discount_unit === "pct" ? `${Number(e.discount_amount)}%` : formatBs(e.discount_amount);
+}
+
 /** 1240 -> "1 240" */
 export function formatCount(n: number | null | undefined) {
   if (n === null || n === undefined || Number.isNaN(n)) return "0";

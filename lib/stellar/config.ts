@@ -6,7 +6,18 @@ export const FRIENDBOT_URL = "https://friendbot.stellar.org";
 export const STELLAR_EXPERT_TX_URL = "https://stellar.expert/explorer/testnet/tx";
 export const STELLAR_EXPERT_ACCOUNT_URL = "https://stellar.expert/explorer/testnet/account";
 
-export const BS_PER_ATTENDEE = 5;
+/**
+ * Testnet solo tiene XLM de prueba: 1 Bs se representa con 1 XLM, así los montos
+ * en Stellar Expert coinciden con los del panel (Bs 48 de comisión = 48 XLM).
+ */
+export const XLM_POR_BS = 1;
+
+/** XLM que el organizador pone para abrir la cuenta de escrow (reserva mínima + comisiones de red). Vuelven al cerrar. */
+export const ESCROW_RESERVE_XLM = "2";
+
+export function bsToXlm(bs: number) {
+  return (Math.round(bs * XLM_POR_BS * 100) / 100).toFixed(2);
+}
 
 // Cuenta TILCA en Testnet: recibe las comisiones. Se configura en .env.local (ver README);
 // sin valor por defecto, porque la llave privada de la cuenta de ejemplo anterior quedó publicada.

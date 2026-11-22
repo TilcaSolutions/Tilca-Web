@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Poster } from "@/components/Poster";
 import { SlowSalesAlert } from "@/components/panel/SlowSalesAlert";
 import { salesPace } from "@/lib/benchmark";
-import { formatCount, formatShort, percent } from "@/lib/format";
+import { COMISION_LABEL, commissionFor } from "@/lib/constants";
+import { formatBs, formatCount, formatShort } from "@/lib/format";
 import { requireOrganizer } from "@/lib/organizer";
 import { loadTotals, sumTotals } from "@/lib/stats";
 import { EVENT_COLUMNS, type TilcaEvent } from "@/lib/types";
@@ -58,6 +59,8 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
     supabase.from("feature_requests").select("event_id").eq("organizer_id", organizer.id).eq("status", "pendiente"),
   ]);
   const summary = sumTotals(last30.values());
+  // Comisión sobre las ventas confirmadas de los últimos 30 días (5% del precio de cada entrada).
+  const commission30 = events.reduce((sum, e) => sum + commissionFor(last30.get(e.id)?.tickets ?? 0, Number(e.price ?? 0)), 0);
   const requested = new Set((requests ?? []).map((r) => r.event_id as string));
 
   // Aviso: el próximo evento que más se atrasa respecto a eventos parecidos.
@@ -99,15 +102,12 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
           <div className={statNum}>{formatCount(summary.clicks)}</div>
         </div>
         <div className={`${stat} border-t border-line lg:border-t-0 lg:border-l`}>
-          <div className="text-sm text-ink-2">Entradas vendidas por TILCA</div>
+          <div className="text-sm text-ink-2">Ventas confirmadas con código TILCA</div>
           <div className={statNum}>{formatCount(summary.tickets)}</div>
         </div>
         <div className={`${stat} border-t border-l border-line lg:border-t-0`}>
-          <div className="text-sm text-ink-2">De ellas, público nuevo</div>
-          <div className="mt-1.5 flex items-baseline gap-2">
-            <span className="font-condensed text-[34px] leading-none font-bold tabular">{formatCount(summary.newAudience)}</span>
-            {summary.tickets > 0 && <span className="text-sm text-ink-2">el {percent(summary.newAudience, summary.tickets)}%</span>}
-          </div>
+          <div className="text-sm text-ink-2">Comisión TILCA ({COMISION_LABEL})</div>
+          <div className={statNum}>{formatBs(commission30)}</div>
         </div>
       </section>
 
@@ -122,7 +122,7 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
                 key={t.id}
                 href={t.id === "todos" ? "/panel" : `/panel?tab=${t.id}`}
                 aria-current={on ? "page" : undefined}
-                className={`flex h-12 flex-none items-center gap-1.5 ${on ? "font-semibold shadow-[inset_0_-2px_0_#17191E]" : "text-ink-2 hover:text-ink"}`}
+                className={`flex h-12 flex-none items-center gap-1.5 ${on ? "font-semibold shadow-[inset_0_-2px_0_var(--color-primary)] text-primary" : "text-ink-2 hover:text-ink"}`}
                 scroll={false}
               >
                 {t.label} <span className="font-normal text-ink-3">{counts[t.id]}</span>
@@ -151,7 +151,7 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
                   <th scope="col" className="p-3 font-medium">Estado</th>
                   <th scope="col" className="p-3 text-right font-medium">Vistas</th>
                   <th scope="col" className="p-3 text-right font-medium">Clics en comprar</th>
-                  <th scope="col" className="p-3 text-right font-medium">Entradas TILCA</th>
+                  <th scope="col" className="p-3 text-right font-medium">Ventas con código</th>
                   <th scope="col" className="w-[150px] px-5 py-3 font-medium">
                     <span className="sr-only">Acciones</span>
                   </th>
@@ -167,7 +167,7 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
                       <td className="px-5 py-3">
                         <span className="flex items-center gap-3">
                           {k === "borradores" && !e.poster_url ? (
-                            <span aria-hidden="true" className="h-[46px] w-[34px] flex-none rounded-[3px] border border-dashed border-[#8C929B]" />
+                            <span aria-hidden="true" className="h-[46px] w-[34px] flex-none rounded-[3px] border border-dashed border-muted" />
                           ) : (
                             <Poster title={e.title} category={e.category} posterUrl={e.poster_url} size="xs" muted={past} />
                           )}
@@ -184,9 +184,9 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
                       <td className="p-3">
                         <span className="inline-flex items-center gap-1.5 text-sm whitespace-nowrap">
                           {k === "borradores" ? (
-                            <span aria-hidden="true" className="h-2 w-2 rounded-full border-2 border-[#8C929B]" />
+                            <span aria-hidden="true" className="h-2 w-2 rounded-full border-2 border-muted" />
                           ) : (
-                            <span aria-hidden="true" className={`h-2 w-2 rounded-full ${past ? "bg-[#8C929B]" : "bg-ok"}`} />
+                            <span aria-hidden="true" className={`h-2 w-2 rounded-full ${past ? "bg-muted" : "bg-ok"}`} />
                           )}
                           {k === "borradores" ? "Borrador" : past ? "Terminado" : "Publicado"}
                         </span>

@@ -41,14 +41,14 @@ export function TicketsChart({ days }: { days: Day[] }) {
   const total = days.reduce((s, d) => s + d.count, 0);
   const summary = peak
     ? `Entradas por día; ${total} en total. El pico fue el ${weekdayLong(peak.date.toISOString())} ${lpParts(peak.date).day} con ${max}.`
-    : "Todavía no hay entradas canjeadas en este periodo.";
+    : "Todavía no hay ventas confirmadas en este periodo.";
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={summary} className="block">
       {ticks.map((t, i) => (
         <g key={i}>
-          <line x1={left} x2={right} y1={y(t)} y2={y(t)} stroke={i === 0 ? "#C8CCD2" : "#EDEEF1"} strokeWidth="1" />
-          <text x={26} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#6B707A">
+          <line x1={left} x2={right} y1={y(t)} y2={y(t)} className={i === 0 ? "stroke-border-strong" : "stroke-border"} strokeWidth="1" />
+          <text x={26} y={y(t) + 4} textAnchor="end" fontSize="11" className="fill-muted">
             {t}
           </text>
         </g>
@@ -63,14 +63,13 @@ export function TicketsChart({ days }: { days: Day[] }) {
             {d.count > 0 && (
               <path
                 d={`M${cx - barW / 2} ${base} V${base - h + r} Q${cx - barW / 2} ${base - h} ${cx - barW / 2 + r} ${base - h} H${cx + barW / 2 - r} Q${cx + barW / 2} ${base - h} ${cx + barW / 2} ${base - h + r} V${base} Z`}
-                fill="#2F5D8A"
-                className="transition-all duration-200 hover:fill-[#1b3d63] cursor-pointer"
+                className="fill-chart transition-all duration-200 hover:opacity-80 cursor-pointer"
               >
                 <title>{`${weekdayLong(d.date.toISOString())} ${p.day} ${MONTHS[p.month]}: ${d.count} ${d.count === 1 ? "entrada" : "entradas"}`}</title>
               </path>
             )}
             {i % labelEvery === 0 && (
-              <text x={cx} y={280} textAnchor="middle" fontSize="11" fill="#6B707A">
+              <text x={cx} y={280} textAnchor="middle" fontSize="11" className="fill-muted">
                 {p.day}
               </text>
             )}
@@ -84,7 +83,7 @@ export function TicketsChart({ days }: { days: Day[] }) {
             y={y(max) + 4}
             textAnchor={anchorEnd ? "end" : "start"}
             fontSize="12"
-            fill="#17191E"
+            className="fill-ink"
             fontWeight="600"
           >
             {peakLabel}
@@ -95,7 +94,7 @@ export function TicketsChart({ days }: { days: Day[] }) {
               y={y(max) + 20}
               textAnchor={anchorEnd ? "end" : "start"}
               fontSize="12"
-              fill="#4B505A"
+              className="fill-ink-2"
             >
               {peakNote}
             </text>
@@ -103,8 +102,8 @@ export function TicketsChart({ days }: { days: Day[] }) {
         </>
       )}
       {!peak && (
-        <text x={(left + right) / 2} y={150} textAnchor="middle" fontSize="13" fill="#6B707A">
-          Todavía no hay entradas canjeadas en este periodo
+        <text x={(left + right) / 2} y={150} textAnchor="middle" fontSize="13" className="fill-muted">
+          Todavía no hay ventas confirmadas en este periodo
         </text>
       )}
     </svg>

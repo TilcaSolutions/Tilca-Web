@@ -26,8 +26,8 @@ export default async function OrganizadorPage() {
       <div>
         <h1 className="font-condensed m-0 text-[40px] leading-none font-extrabold tracking-[-0.5px]">Publica tus eventos</h1>
         <p className="mt-2.5 mb-0 text-[15px] leading-normal text-ink-2">
-          Tu cuenta es para ir a eventos. Si también organizas, crea tu perfil de organizador: llegas a público nuevo y pagas solo
-          por las entradas que te trae TILCA.
+          Tu cuenta es para ir a eventos. Si también organizas, crea tu perfil de organizador: publicar es gratis y pagas solo el 5% de
+          cada entrada que vendemos.
         </p>
       </div>
       <form action={becomeOrganizer} className="flex flex-col gap-5">

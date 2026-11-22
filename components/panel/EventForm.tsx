@@ -3,8 +3,8 @@
 /* eslint-disable @next/next/no-img-element -- vista previa de un archivo local */
 import { startTransition, useActionState, useState } from "react";
 import { saveEvent, type EventFormState } from "@/app/panel/evento/actions";
-import { CATEGORIES } from "@/lib/constants";
-import { lpParts } from "@/lib/format";
+import { CATEGORIES, COMISION_LABEL, commissionFor, SALES_CHANNELS } from "@/lib/constants";
+import { formatBs, lpParts } from "@/lib/format";
 import { createClient } from "@/lib/supabase/client";
 import type { TilcaEvent } from "@/lib/types";
 import { VENUES } from "@/lib/venues";
@@ -25,7 +25,7 @@ function isoToTime(iso: string | null) {
 function FieldError({ id, error }: { id: string; error?: string }) {
   if (!error) return null;
   return (
-    <span id={`${id}-error`} className="text-sm text-[#B3261E]">
+    <span id={`${id}-error`} className="text-sm text-danger">
       {error}
     </span>
   );
@@ -71,7 +71,13 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
     event?.lat != null && event?.lng != null ? { lat: event.lat, lng: event.lng } : null,
   );
   const [posterUrl, setPosterUrl] = useState(event?.poster_url ?? "");
-  const [budget, setBudget] = useState(event?.promo_budget_bs ?? 250);
+  const [price, setPrice] = useState(event?.price != null ? String(event.price) : "");
+  const [channels, setChannels] = useState<string[]>(event?.sales_channels ?? ["ticketera"]);
+  const [expectedSales, setExpectedSales] = useState(event?.expected_sales != null ? String(event.expected_sales) : "");
+  // Depósito sugerido = ventas esperadas × precio × 5%, hasta que el organizador lo cambie a mano.
+  const [depositInput, setDepositInput] = useState<string | null>(
+    event && Number(event.promo_budget_bs ?? 0) > 0 ? String(event.promo_budget_bs) : null,
+  );
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -106,6 +112,13 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
     }
     setUploading(false);
   }
+
+  const isImported = !!event?.source;
+  const escrowStatus = event?.escrow_status ?? "sin_escrow";
+  const depositLocked = escrowStatus !== "sin_escrow" && escrowStatus !== "deposito_pendiente";
+  const suggested = commissionFor(Number(expectedSales) || 0, Number(price) || 0);
+  const depositValue = depositInput ?? (suggested > 0 ? String(suggested) : "");
+  const sellsOnline = channels.includes("ticketera");
 
   const aria = (id: string) => (e[id] ? { "aria-invalid": true, "aria-describedby": `${id}-error` } : {});
   const sectionTitle = "m-0 text-base font-semibold";
@@ -219,7 +232,7 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
           <div
             role="group"
             aria-labelledby="location-label"
-            className={`relative h-[300px] overflow-hidden rounded-control border ${e.location ? "border-[#B3261E]" : "border-line"}`}
+            className={`relative h-[300px] overflow-hidden rounded-control border ${e.location ? "border-danger" : "border-line"}`}
           >
             <LocationPicker value={location} onChange={setLocation} />
           </div>
@@ -230,7 +243,7 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
       <section className="panel flex flex-col gap-4 p-5 sm:p-6">
         <h2 className={sectionTitle}>Entradas</h2>
         <label className="flex items-center gap-2.5 text-[15px]">
-          <input type="checkbox" name="is_free" checked={isFree} onChange={(ev) => setIsFree(ev.target.checked)} className="h-5 w-5 accent-[#17191E]" />
+          <input type="checkbox" name="is_free" checked={isFree} onChange={(ev) => setIsFree(ev.target.checked)} className="h-5 w-5 accent-primary" />
           Es gratis
         </label>
         {!isFree && (
@@ -243,7 +256,8 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
                 inputMode="decimal"
                 min={0}
                 step="any"
-                defaultValue={event?.price ?? ""}
+                value={price}
+                onChange={(ev) => setPrice(ev.target.value)}
                 className="field"
                 {...aria("price")}
               />
@@ -288,8 +302,8 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
           </Field>
           <Field
             id="ticket_url"
-            label={isFree ? "Link para reservar (opcional)" : "Link de compra"}
-            hint="Tu página en la ticketera. TILCA lleva al público ahí con su código."
+            label={isFree ? "Link para reservar (opcional)" : sellsOnline || isImported ? "Link de compra" : "Link de compra (opcional)"}
+            hint="Tu página en la ticketera. El botón “Comprar entrada” lleva ahí."
             error={e.ticket_url}
           >
             <input
@@ -306,44 +320,124 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
         </div>
       </section>
 
-      <section className="panel flex flex-col gap-4 p-5 sm:p-6">
-        <div className="flex items-center justify-between">
-          <h2 className={sectionTitle}>Presupuesto de promoción (Stellar Escrow)</h2>
-          <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
-            Stellar Escrow
-          </span>
-        </div>
-        <p className="m-0 text-sm text-ink-2">
-          TILCA cobra Bs 5 solo por cada asistente nuevo que canjea su código. El monto se deposita en un contrato
-          de custodia (Escrow) en Stellar Testnet y el saldo que no se use se te reembolsa al cerrar el evento.
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            id="promo_budget_bs"
-            label="Presupuesto asignado en Bs"
-            error={e.promo_budget_bs}
-            hint={`Alcanza para ${Math.floor((Number(budget) || 0) / 5)} asistentes nuevos garantizados.`}
-          >
-            <input
-              id="promo_budget_bs"
-              name="promo_budget_bs"
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step="5"
-              value={budget}
-              onChange={(e) => setBudget(Number(e.target.value) || 0)}
-              className="field"
-            />
-          </Field>
-          <div className="flex flex-col justify-center rounded-control bg-fog p-3.5 text-sm text-ink-2 border border-line/60">
-            <span className="font-semibold text-ink">Garantía sin riesgo</span>
-            <span className="text-xs mt-0.5 text-ink-3">
-              Solo se pagan las entradas verificadas en boletería. Cada cobro se libera en Stellar Testnet y queda respaldado con comprobante público en blockchain.
-            </span>
+      {!isFree && !isImported && (
+        <section className="panel flex flex-col gap-4 p-5 sm:p-6" aria-labelledby="h-venta-tilca">
+          <div>
+            <h2 id="h-venta-tilca" className={sectionTitle}>
+              Venta con código TILCA
+            </h2>
+            <p className="mt-1 mb-0 text-sm text-ink-2">
+              Crea en tu ticketera un código de descuento para TILCA. El público lo ve en la ficha y compra con él. Publicar es
+              gratis: TILCA cobra el {COMISION_LABEL} de cada entrada que vendemos con ese código.
+            </p>
           </div>
-        </div>
-      </section>
+          <div className="grid gap-4 sm:grid-cols-[1.2fr_1fr_1fr]">
+            <Field id="discount_code" label="Código de descuento TILCA" hint="El mismo que creaste en tu ticketera." error={e.discount_code}>
+              <input
+                id="discount_code"
+                name="discount_code"
+                defaultValue={event?.discount_code ?? ""}
+                placeholder="TILCA10"
+                autoCapitalize="characters"
+                className="field font-semibold uppercase tracking-wide"
+                {...aria("discount_code")}
+              />
+            </Field>
+            <Field id="discount_amount" label="Descuento que da (opcional)" hint="Solo se muestra al público." error={e.discount_amount}>
+              <input
+                id="discount_amount"
+                name="discount_amount"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
+                defaultValue={event?.discount_amount ?? ""}
+                className="field"
+                {...aria("discount_amount")}
+              />
+            </Field>
+            <Field id="discount_unit" label="En">
+              <select id="discount_unit" name="discount_unit" defaultValue={event?.discount_unit ?? "bs"} className="field">
+                <option value="bs">Bolivianos</option>
+                <option value="pct">Porcentaje</option>
+              </select>
+            </Field>
+          </div>
+
+          <fieldset className="m-0 flex flex-col gap-2 border-0 p-0" aria-describedby={e.sales_channels ? "sales_channels-error" : undefined}>
+            <legend className="label mb-1.5">Dónde vendes</legend>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              {SALES_CHANNELS.map((c) => (
+                <label key={c.id} className="flex items-center gap-2.5 text-[15px]">
+                  <input
+                    type="checkbox"
+                    name="sales_channels"
+                    value={c.id}
+                    checked={channels.includes(c.id)}
+                    onChange={(ev) => setChannels((prev) => (ev.target.checked ? [...prev, c.id] : prev.filter((x) => x !== c.id)))}
+                    className="h-5 w-5 accent-primary"
+                  />
+                  {c.label}
+                </label>
+              ))}
+            </div>
+            <FieldError id="sales_channels" error={e.sales_channels} />
+          </fieldset>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field id="expected_sales" label="Ventas que esperas de TILCA" hint="Entradas, por ejemplo 30." error={e.expected_sales}>
+              <input
+                id="expected_sales"
+                name="expected_sales"
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={expectedSales}
+                onChange={(ev) => setExpectedSales(ev.target.value)}
+                className="field"
+                {...aria("expected_sales")}
+              />
+            </Field>
+            {depositLocked ? (
+              <div className="flex flex-col gap-1.5">
+                <span className="label">Depósito</span>
+                <span className="flex min-h-11 items-center rounded-control border border-line bg-fog px-3 text-[15px] font-semibold">
+                  {formatBs(event?.promo_budget_bs)} depositados
+                </span>
+                <span className="text-[13px] text-ink-3">Para agregar más, ve a Presupuesto y cobros.</span>
+              </div>
+            ) : (
+              <Field
+                id="promo_budget_bs"
+                label="Depósito en Bs"
+                error={e.promo_budget_bs}
+                hint={
+                  suggested > 0
+                    ? `Sugerido: ${expectedSales} entradas × ${formatBs(Number(price))} × ${COMISION_LABEL} = ${formatBs(suggested)}.`
+                    : `Ventas esperadas × precio × ${COMISION_LABEL}.`
+                }
+              >
+                <input
+                  id="promo_budget_bs"
+                  name="promo_budget_bs"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="any"
+                  value={depositValue}
+                  onChange={(ev) => setDepositInput(ev.target.value)}
+                  className="field"
+                  {...aria("promo_budget_bs")}
+                />
+              </Field>
+            )}
+          </div>
+          <p className="m-0 rounded-control border border-line/60 bg-fog p-3.5 text-[13px] leading-relaxed text-ink-2">
+            El depósito queda en garantía (escrow) hasta que cierres el evento. Al cerrar, TILCA cobra el {COMISION_LABEL} de las
+            entradas que confirmes y te devuelve el resto. Cada movimiento tiene su comprobante público.
+          </p>
+        </section>
+      )}
 
       <section className="panel flex flex-col gap-4 p-5 sm:p-6">
         <h2 className={sectionTitle}>Afiche</h2>
@@ -359,7 +453,7 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
                 ? "Este es tu afiche."
                 : "Si no subes uno, TILCA genera un afiche con el color de la categoría y el título."}
             </p>
-            <label className="btn-secondary h-11 cursor-pointer self-start px-4 text-[15px] focus-within:outline-2 focus-within:outline-accent">
+            <label className="btn-secondary h-11 cursor-pointer self-start px-4 text-[15px] focus-within:outline-2 focus-within:outline-primary">
               {uploading ? "Subiendo…" : posterUrl ? "Cambiar afiche" : "Subir afiche"}
               <input
                 type="file"
@@ -379,7 +473,7 @@ export function EventForm({ event, userId }: { event?: TilcaEvent; userId: strin
             )}
             <span className="text-[13px] text-ink-3">JPG, PNG o WebP, hasta 5 MB. Mejor en vertical (3:4).</span>
             {uploadError && (
-              <span role="alert" className="text-sm text-[#B3261E]">
+              <span role="alert" className="text-sm text-danger">
                 {uploadError}
               </span>
             )}

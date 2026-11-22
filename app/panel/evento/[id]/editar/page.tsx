@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { EventForm } from "@/components/panel/EventForm";
 import { deleteDraft } from "@/app/panel/evento/actions";
 import { requireOrganizer } from "@/lib/organizer";
-import { EVENT_COLUMNS, type TilcaEvent } from "@/lib/types";
+import { EVENT_PANEL_COLUMNS, type TilcaEvent } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Editar evento" };
 
@@ -13,7 +13,7 @@ export default async function EditEventPage({ params }: PageProps<"/panel/evento
   const { supabase, user, organizer } = await requireOrganizer();
   const { data: event } = await supabase
     .from("events")
-    .select(EVENT_COLUMNS)
+    .select(EVENT_PANEL_COLUMNS)
     .eq("id", id)
     .eq("organizer_id", organizer.id)
     .maybeSingle<TilcaEvent>();

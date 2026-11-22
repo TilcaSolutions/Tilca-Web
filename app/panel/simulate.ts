@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireOrganizer } from "@/lib/organizer";
 
-const AMOUNTS: Record<string, number> = { vistas: 10, clics: 3, canjes: 1 };
+const AMOUNTS: Record<string, number> = { vistas: 10, clics: 3, ventas: 1 };
 
 export async function simulate(formData: FormData) {
   if (process.env.NEXT_PUBLIC_ENABLE_SIMULATOR !== "true") return;
