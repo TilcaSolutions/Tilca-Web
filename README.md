@@ -23,7 +23,7 @@ Encuesta a público de eventos culturales en La Paz, con corte al 22/11: **67 re
 - **28** no fueron a un evento por no enterarse a tiempo.
 - **39%** compra sus entradas en ticketeras.
 
-La validación con organizadores está en [docs/entrevistas.md](docs/entrevistas.md).
+Además, hicimos **17 entrevistas a organizadores** (14 del segmento objetivo). Lo que más se repite: el público es siempre el mismo (9 de 13 perspectivas), difunden solos y sin medir qué les trae entradas, y la última semana decide la función. Detalle y método en [docs/entrevistas.md](docs/entrevistas.md).
 
 ## Para el jurado
 
