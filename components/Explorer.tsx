@@ -16,7 +16,7 @@ const EventsMap = dynamic(() => import("./map/EventsMap"), {
   loading: () => (
     <div className="absolute inset-0 flex items-center justify-center bg-map">
       <div className="flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-ink-2 shadow-sm backdrop-blur-sm">
-        <span className="h-2 w-2 animate-ping rounded-full bg-accent" />
+        <span className="h-2 w-2 animate-ping rounded-full bg-primary" />
         Cargando mapa...
       </div>
     </div>
@@ -188,7 +188,7 @@ export function Explorer({ events }: { events: PublicEvent[] }) {
             </h1>
             {userLocation ? (
               <span className="flex items-center gap-1 text-sm font-medium text-ink-2">
-                <span className="h-2 w-2 rounded-full bg-[#1E7FC2]" />
+                <span className="h-2 w-2 rounded-full bg-chart" />
                 Más cercanos primero
               </span>
             ) : (
@@ -251,7 +251,7 @@ export function Explorer({ events }: { events: PublicEvent[] }) {
                         i === filtered.length - 1 ? "border-b" : ""
                       } ${
                         selected
-                          ? "bg-fog shadow-[inset_4px_0_0_#17191E]"
+                          ? "bg-fog shadow-[inset_4px_0_0_var(--color-primary)]"
                           : "hover:bg-fog/60 hover:pl-6"
                       }`}
                     >
@@ -259,7 +259,7 @@ export function Explorer({ events }: { events: PublicEvent[] }) {
                         <Poster title={e.title} category={e.category} posterUrl={e.poster_url} size="sm" />
                       </div>
                       <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                        <span className="text-[15px] sm:text-base font-semibold text-ink group-hover:text-accent transition-colors line-clamp-2">
+                        <span className="text-[15px] sm:text-base font-semibold text-ink group-hover:text-primary transition-colors line-clamp-2">
                           {e.title}
                         </span>
                         <span className="text-sm text-ink-2 line-clamp-1">

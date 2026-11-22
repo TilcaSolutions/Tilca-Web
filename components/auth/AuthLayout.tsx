@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BRAND } from "@/lib/brand";
 import { LogoMark, Logo } from "../Logo";
 import { Poster } from "../Poster";
 
@@ -16,9 +17,9 @@ const TILES = [
 
 function Tile({ t }: { t: (typeof TILES)[number] }) {
   const special: Record<string, { bg: string; ink: string }> = {
-    dark: { bg: "#17191E", ink: "#FFFFFF" },
-    pink: { bg: "#D1006B", ink: "#FFFFFF" },
-    white: { bg: "#FFFFFF", ink: "#17191E" },
+    dark: { bg: BRAND.ink, ink: BRAND.surface },
+    pink: { bg: BRAND.primary, ink: BRAND.surface },
+    white: { bg: BRAND.surface, ink: BRAND.ink },
   };
   const s = special[t.category];
   if (s) {
@@ -39,7 +40,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh bg-white">
       <aside
         aria-label="Afiches de eventos"
-        className="relative hidden flex-none basis-[46%] max-w-[640px] grid-cols-3 gap-2.5 overflow-hidden bg-[#DADDE2] p-2.5 lg:grid"
+        className="relative hidden flex-none basis-[46%] max-w-[640px] grid-cols-3 gap-2.5 overflow-hidden bg-border p-2.5 lg:grid"
         style={{ gridAutoRows: "1fr" }}
       >
         {TILES.map((t) => (

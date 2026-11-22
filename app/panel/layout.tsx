@@ -20,7 +20,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
         </div>
         <PanelNav />
         <div className="mt-auto hidden items-center gap-2.5 border-t border-line px-2.5 pt-3 md:flex">
-          <span className="font-condensed flex h-8 w-8 flex-none items-center justify-center rounded-[6px] bg-[#C8102E] text-sm font-extrabold text-white">
+          <span className="font-condensed flex h-8 w-8 flex-none items-center justify-center rounded-[6px] bg-primary text-sm font-extrabold text-white">
             {initials(organizer.name) || "T"}
           </span>
           <span className="flex min-w-0 flex-1 flex-col">

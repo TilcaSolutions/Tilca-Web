@@ -65,7 +65,7 @@ function Controls({ onLocate }: { onLocate?: () => void }) {
           onClick={onLocate}
           className={`${controlBtn} rounded-control shadow-[0_1px_3px_rgba(23,25,30,0.2)]`}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17191E" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             <circle cx="12" cy="12" r="4" />
             <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
           </svg>

@@ -5,6 +5,7 @@ import "leaflet.markercluster";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useMap, useMapEvents } from "react-leaflet";
+import { BRAND } from "@/lib/brand";
 import { categoryInfo, LA_PAZ_CENTER } from "@/lib/constants";
 import { formatPrice, formatWhen, lpParts } from "@/lib/format";
 import type { PublicEvent } from "@/lib/types";
@@ -189,7 +190,7 @@ function SelectedCard({
               {event.venue_name}
             </span>
             <div className="mt-1 flex items-center justify-between">
-              <span className="text-xs font-semibold text-accent group-hover:underline">Ver detalles →</span>
+              <span className="text-xs font-semibold text-primary group-hover:underline">Ver detalles →</span>
               <span className="rounded bg-fog px-1.5 py-0.5 text-xs font-semibold text-ink tabular border border-line/60">
                 {formatPrice(event.price)}
               </span>
@@ -245,9 +246,9 @@ function UserLocation({ location }: { location: [number, number] | null }) {
     if (!location) return;
     const marker = L.circleMarker(location, {
       radius: 8,
-      color: "#FFFFFF",
+      color: BRAND.surface,
       weight: 3,
-      fillColor: "#1E7FC2",
+      fillColor: BRAND.chart,
       fillOpacity: 1,
       interactive: false,
     }).addTo(map);

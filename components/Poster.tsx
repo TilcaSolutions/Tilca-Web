@@ -84,8 +84,8 @@ export function Poster({
   className = "",
 }: PosterProps) {
   const cat = categoryInfo(category);
-  const bg = muted ? "#8C929B" : cat.color;
-  const ink = muted ? "#FFFFFF" : cat.ink;
+  const bg = muted ? "var(--color-muted)" : cat.color;
+  const ink = muted ? "var(--color-surface)" : cat.ink;
 
   if (size === "tile") {
     return (

@@ -1,23 +1,35 @@
 import Link from "next/link";
+import { CAT_PATH, CAT_TRANSFORM, CAT_VIEWBOX, WORD_PATH, WORD_TRANSFORM, WORD_VIEWBOX } from "@/lib/brand";
 
-export function LogoMark({ size = 30 }: { size?: number }) {
-  const dot = Math.round(size * 0.27);
+/** La cabeza del gato del logo, en el amarillo de la marca. */
+export function LogoCat({ height }: { height: number }) {
   return (
-    <span
-      className="font-condensed group inline-flex items-baseline font-extrabold leading-none select-none tracking-[-0.5px]"
-      style={{ fontSize: size, gap: 3 }}
+    <svg
+      viewBox={`0 0 ${CAT_VIEWBOX.width} ${CAT_VIEWBOX.height}`}
+      aria-hidden="true"
+      style={{ height, width: (height * CAT_VIEWBOX.width) / CAT_VIEWBOX.height }}
+      className="flex-none"
     >
-      <span className="transition-colors duration-200 group-hover:text-ink">tilca</span>
-      <span
-        aria-hidden="true"
-        className="relative inline-block rounded-full bg-accent transition-transform duration-300 ease-out group-hover:scale-125"
-        style={{ width: dot, height: dot }}
+      <path transform={CAT_TRANSFORM} d={CAT_PATH} className="fill-logo-cat" />
+    </svg>
+  );
+}
+
+/** Gato + "tilca" en horizontal. `size` equivale al tamaño de letra de la palabra. */
+export function LogoMark({ size = 30 }: { size?: number }) {
+  const wordHeight = size * 0.78;
+  return (
+    <span className="inline-flex items-center leading-none select-none" style={{ gap: size * 0.28 }}>
+      <LogoCat height={Math.round(size * 1.2)} />
+      <svg
+        viewBox={`0 0 ${WORD_VIEWBOX.width} ${WORD_VIEWBOX.height}`}
+        role="img"
+        aria-label="tilca"
+        style={{ height: wordHeight, width: (wordHeight * WORD_VIEWBOX.width) / WORD_VIEWBOX.height }}
+        className="flex-none"
       >
-        <span
-          className="absolute inset-0 rounded-full bg-accent opacity-75 blur-[2px] transition-opacity duration-300 group-hover:opacity-100"
-          aria-hidden="true"
-        />
-      </span>
+        <path transform={WORD_TRANSFORM} d={WORD_PATH} className="fill-logo-word" />
+      </svg>
     </span>
   );
 }

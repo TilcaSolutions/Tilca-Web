@@ -45,7 +45,7 @@ export function SaveButton({ eventId, userId, initialSaved }: Props) {
       aria-pressed={saved}
       className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-control px-4 text-[15px] font-semibold transition-all duration-200 active:scale-95 ${
         saved
-          ? "border-2 border-accent bg-accent/5 text-accent shadow-xs"
+          ? "border-2 border-primary bg-primary/5 text-primary shadow-xs"
           : "border border-control bg-white hover:border-ink-3 hover:bg-fog text-ink"
       }`}
     >
@@ -58,7 +58,7 @@ export function SaveButton({ eventId, userId, initialSaved }: Props) {
         strokeWidth="2"
         strokeLinejoin="round"
         aria-hidden="true"
-        className={`transition-transform duration-200 ${saved ? "scale-110 text-accent" : "text-ink"}`}
+        className={`transition-transform duration-200 ${saved ? "scale-110 text-primary" : "text-ink"}`}
       >
         <path d="M6 3h12v18l-6-4-6 4z" />
       </svg>

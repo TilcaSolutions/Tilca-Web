@@ -44,7 +44,7 @@ export function SearchBox({ live }: { live: boolean }) {
         push(value, live ? "replace" : "push");
       }}
     >
-      <div className="group relative flex h-10 items-center gap-2.5 rounded-control border border-transparent bg-fog px-3.5 text-ink-3 transition-all duration-200 focus-within:border-accent/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-accent/15 focus-within:shadow-xs">
+      <div className="group relative flex h-10 items-center gap-2.5 rounded-control border border-transparent bg-fog px-3.5 text-ink-3 transition-all duration-200 focus-within:border-primary/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/15 focus-within:shadow-xs">
         <svg
           width="18"
           height="18"
@@ -54,7 +54,7 @@ export function SearchBox({ live }: { live: boolean }) {
           strokeWidth="2"
           strokeLinecap="round"
           aria-hidden="true"
-          className="flex-none text-ink-3 transition-colors group-focus-within:text-accent"
+          className="flex-none text-ink-3 transition-colors group-focus-within:text-primary"
         >
           <circle cx="11" cy="11" r="7" />
           <path d="M20 20l-3.5-3.5" />

@@ -70,7 +70,7 @@ export function PanelNav() {
                 on ? "bg-fog font-semibold text-ink shadow-xs" : "text-ink-2 hover:bg-fog/60 hover:text-ink"
               }`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={on ? "text-accent" : "text-ink-3"}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={on ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={on ? "text-primary" : "text-ink-3"}>
                 {item.icon}
               </svg>
               {item.label}

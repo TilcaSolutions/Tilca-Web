@@ -26,7 +26,7 @@ export function FeatureButton({
         className={
           variant === "primary"
             ? "btn-primary h-10 px-4 text-sm"
-            : "flex h-9 items-center rounded-control border border-warn-strong px-3.5 text-sm font-semibold text-warn-ink hover:bg-[#FCEBC0]"
+            : "flex h-9 items-center rounded-control border border-warn-strong px-3.5 text-sm font-semibold text-warn-ink hover:bg-accent/20"
         }
       >
         Destacar en la cartelera

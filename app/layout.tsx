@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { BRAND } from "@/lib/brand";
 import { Archivo } from "next/font/google";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import "./globals.css";
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FFFFFF",
+  themeColor: BRAND.primary,
   width: "device-width",
   initialScale: 1,
 };
