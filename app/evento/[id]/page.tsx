@@ -22,6 +22,7 @@ import {
   ticketSiteName,
 } from "@/lib/format";
 import { createClient, getUser } from "@/lib/supabase/server";
+import { TEST_TICKETING_ENABLED } from "@/lib/test-ticketing";
 import { EVENT_COLUMNS, type TilcaEvent } from "@/lib/types";
 
 async function loadEvent(id: string) {
@@ -282,7 +283,7 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
               <span className="text-[13px] text-ink-3">
                 {event.source
                   ? `Datos tomados de ${ticketSite ?? "la ticketera"}: la compra y el precio final se confirman allí.`
-                  : `La compra se realiza en ${ticketSite ?? "la ticketera del organizador"}.${code ? ` Usa el código ${code} al pagar.` : ""}`}
+                  : `La compra se realiza en ${code && TEST_TICKETING_ENABLED ? "la ticketera de prueba (simulación)" : (ticketSite ?? "la ticketera del organizador")}.${code ? ` Usa el código ${code} al pagar.` : ""}`}
               </span>
             )}
           </div>

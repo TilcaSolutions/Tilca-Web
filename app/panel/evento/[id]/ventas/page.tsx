@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { addDoorSale, deleteSale, retryDeposit } from "@/app/panel/actions";
 import { CloseEventForm, DepositForm, TicketSalesForm } from "@/components/panel/SalesForms";
 import { Stat } from "@/components/panel/Stat";
+import { TestTicketingReport } from "@/components/ticketing/TestTicketingReport";
+import { TEST_TICKETING_ENABLED } from "@/lib/test-ticketing";
 import { COMISION_LABEL } from "@/lib/constants";
 import { formatBs, formatCount, formatLong, formatPrice, formatShort } from "@/lib/format";
 import { requireOrganizer } from "@/lib/organizer";
@@ -90,6 +92,10 @@ export default async function ConfirmSalesPage({ params }: PageProps<"/panel/eve
               note={s.missing > 0 ? `Faltan ${formatBs(s.missing)} de depósito` : "El resto del depósito"}
             />
           </section>
+
+          {TEST_TICKETING_ENABLED && (
+            <TestTicketingReport supabase={supabase} eventId={event.id} code={event.discount_code} open={open} />
+          )}
 
           {open && (
             <div className="flex flex-col gap-4 lg:flex-row">
