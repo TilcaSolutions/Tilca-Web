@@ -13,7 +13,7 @@ Ese 5% se cobra desde un escrow en **Stellar Testnet**, con un comprobante públ
 | Recorrido en Stellar | https://tilca.vercel.app/demo |
 | Comprobante real (comisión del 5%) | https://stellar.expert/explorer/testnet/tx/d61f82549e667d2689468aa7a15b75b2ea5768ef798f90f36f13335cff577c2d |
 | Encuesta (solo lectura) | https://docs.google.com/spreadsheets/d/1DlWNGwtfAx4mhm2YZJgWdZyKnp3NRUm-eXLfDvDHswY/edit?usp=sharing |
-| Deck | [COMPLETAR: link al deck] |
+| Deck | https://canva.link/ma2qe44txm9z8c9 |
 
 ## El problema
 
@@ -66,12 +66,12 @@ Esto es un plan; nada de esta sección está implementado todavía.
 
 | Persona | Rol | Qué hizo en esta entrega |
 | --- | --- | --- |
-| Alexander | [COMPLETAR: rol] | Desarrollo de la app, integración con Stellar y despliegue. |
-| Nicolás | [COMPLETAR: rol] | [COMPLETAR: p. ej. entrevistas, encuesta, storytelling] |
-| Nahomi | [COMPLETAR: rol] | [COMPLETAR: lo que hizo] |
-| [COMPLETAR: cuarto integrante] | [COMPLETAR: rol] | [COMPLETAR] |
+| Alexander | CEO, organizador principal | Desarrollo de la app, integración con Stellar y despliegue. |
+| Nicolás | Marketing y conexión | Conexión con organizadores, espacios culturales y personas del sector; marketing. |
+| Nahomi | CTO | Diseño y software. |
+| Fabián Tejerina | Finanzas | Modelo de negocio. |
 
-Origen del código: el MVP se prototipó antes en local y este repositorio se creó el 21/11 para la entrega. [COMPLETAR: ajustar si no es así]
+Origen del código: el MVP se prototipó antes en local y este repositorio se creó el 21/11 para la entrega.
 
 ## Cómo funciona
 
