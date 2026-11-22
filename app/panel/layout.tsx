@@ -3,6 +3,11 @@ import { PanelNav } from "@/components/panel/PanelNav";
 import { signOut } from "@/app/auth/actions";
 import { initials, requireOrganizer } from "@/lib/organizer";
 import Link from "next/link";
+import { JuryResetButton } from "@/components/panel/JuryResetButton";
+import { resetJuryData } from "./jurado-actions";
+
+// "Restablecer datos de ejemplo" hace transacciones en Stellar: puede tardar más de un minuto.
+export const maxDuration = 300;
 
 export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
   const { organizer } = await requireOrganizer();
@@ -36,10 +41,13 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
       </nav>
       <main className="flex min-w-0 flex-1 flex-col gap-5 px-4 py-6 sm:px-10 sm:py-8">
         {organizer.is_sample && (
-          <p role="status" className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[10px] border border-accent bg-warning-bg px-4 py-2.5 text-sm text-warning-text">
+          <div role="status" className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[10px] border border-accent bg-warning-bg px-4 py-2.5 text-sm text-warning-text">
             <strong className="font-semibold">Modo jurado: datos de ejemplo.</strong>
             <span>Los eventos, ventas y cobros son de prueba; los comprobantes son transacciones reales en Stellar Testnet.</span>
-          </p>
+            <form action={resetJuryData}>
+              <JuryResetButton />
+            </form>
+          </div>
         )}
         {children}
       </main>

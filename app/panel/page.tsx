@@ -79,6 +79,16 @@ export default async function PanelPage({ searchParams }: PageProps<"/panel">) {
 
   return (
     <>
+      {sp.restablecido === "1" && (
+        <p role="status" className="m-0 rounded-[10px] bg-primary-soft px-4 py-2.5 text-sm text-primary">
+          Listo: los datos de ejemplo y los cobros en Stellar se restablecieron.
+        </p>
+      )}
+      {sp.restablecido === "espera" && (
+        <p role="status" className="m-0 rounded-[10px] bg-warning-bg px-4 py-2.5 text-sm text-warning-text">
+          Los datos se restablecieron hace menos de 3 minutos. Espera un poco antes de volver a hacerlo.
+        </p>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-condensed m-0 text-[40px] leading-none font-extrabold tracking-[-0.5px]">Mis eventos</h1>

@@ -12,15 +12,12 @@
 import { createClient } from "@supabase/supabase-js";
 import { closeEscrow, depositToEscrow } from "../lib/stellar/escrow";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.SUPABASE_SECRET_KEY;
-if (!url || !key) {
-  console.error("Faltan NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SECRET_KEY.");
-  process.exit(1);
-}
-const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+export async function seedJuryData() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error("Faltan NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SECRET_KEY.");
+  const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 
-async function main() {
   const { data: org } = await db
     .from("organizers")
     .select("id, name")
@@ -51,7 +48,10 @@ async function main() {
   console.log("Listo: el panel del jurado ya tiene cobros con comprobantes en Stellar Testnet.");
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// `npm run seed:jurado`: se ejecuta solo cuando se corre este archivo directamente.
+if (process.argv[1] && /seed-jury\.ts$/.test(process.argv[1])) {
+  seedJuryData().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

@@ -7,30 +7,26 @@
  * Se puede correr varias veces: borra los datos de ejemplo anteriores y los vuelve a crear
  * con fechas relativas a hoy (próximas 3 semanas).
  */
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { lpMidnight } from "../lib/time-filters";
 import { venueByName } from "../lib/venues";
 import { SAMPLE_PROFILES } from "./seed-profiles";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!url || !key) {
-  console.error("Faltan NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SECRET_KEY en .env.local");
-  process.exit(1);
-}
-const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+// Se crea al correr el seed (no al importar el archivo: también lo usa "Restablecer datos de ejemplo").
+let db: SupabaseClient;
 
 export const DEMO_EMAIL = "demo@tilca.bo";
 export const DEMO_PASSWORD = "tilca-demo-2026";
 
 // Generador pseudoaleatorio con semilla: los datos salen iguales cada vez.
-let seed = 20261120;
+const SEED = 20261120;
+let seed = SEED;
 function rand() {
   seed = (seed * 1664525 + 1013904223) % 4294967296;
   return seed / 4294967296;
 }
 
-const NOW = new Date();
+let NOW = new Date();
 /** Día `d` desde hoy (hora de La Paz) a las hh:mm. */
 function at(d: number, hhmm: string) {
   const [h, m] = hhmm.split(":").map(Number);
@@ -462,7 +458,15 @@ async function insertBatches(table: string, rows: Record<string, unknown>[]) {
   }
 }
 
-async function main() {
+export async function seedDemoData() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Faltan NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SECRET_KEY en .env.local");
+  db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  // Mismos datos en cada corrida, con fechas relativas a hoy.
+  seed = SEED;
+  NOW = new Date();
+
   console.log("Borrando datos de ejemplo anteriores…");
   {
     const { error } = await db.from("organizers").delete().eq("is_sample", true);
@@ -598,7 +602,7 @@ async function main() {
       viewDates.map((d) => ({ event_id: eventId, anon_id: "ejemplo", channel: weightedChannel(), is_sample: true, created_at: d.toISOString() })),
     );
 
-    // Entradas canjeadas: por día (casa) o repartidas.
+    // Días con ventas confirmadas: por día (casa) o repartidas.
     const ticketDays: number[] = [];
     if (Array.isArray(m.tickets)) {
       m.tickets.forEach((n, i) => {
@@ -645,8 +649,11 @@ async function main() {
   console.log(`  contraseña: ${DEMO_PASSWORD}`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+// `npm run seed`: se ejecuta solo cuando se corre este archivo directamente.
+if (process.argv[1] && /seed\.ts$/.test(process.argv[1])) {
+  seedDemoData().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}
 

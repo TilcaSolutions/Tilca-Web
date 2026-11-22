@@ -1,8 +1,39 @@
 # TILCA
 
-Agenda cultural de La Paz con cobro por resultados. TILCA reúne en un mapa los eventos de teatro, música, danza, stand up y arte de la ciudad. Publicar es gratis; el organizador paga solo el **5% de cada entrada que se vende con su código TILCA**, liquidado desde un escrow en Stellar.
+**TILCA es la cartelera cultural de La Paz en un mapa.** Reúne teatro, música, danza, stand up y arte para que el público se entere de los eventos *antes* de que pasen.
+Publicar es gratis: el organizador paga solo el **5% de cada entrada que se vende con su código de descuento TILCA**.
+Ese 5% se cobra desde un escrow en **Stellar Testnet**, con un comprobante público por cada movimiento.
 
-> Estado: MVP. Los pagos corren en **Stellar Testnet**.
+## Para el jurado
+
+| | |
+| --- | --- |
+| Sitio publicado | https://tilca.vercel.app |
+| Para organizadores | https://tilca.vercel.app/organizadores |
+| Recorrido en Stellar | https://tilca.vercel.app/demo |
+| Comprobante real (comisión del 5%) | https://stellar.expert/explorer/testnet/tx/d61f82549e667d2689468aa7a15b75b2ea5768ef798f90f36f13335cff577c2d |
+
+**Entrar como jurado:** en https://tilca.vercel.app/organizadores toca **"Entrar como jurado"**. Entras sin registrarte al panel del organizador de ejemplo (Teatro de Altura), con eventos, ventas confirmadas y cobros ya cargados. También se puede entrar en https://tilca.vercel.app/entrar con `demo@tilca.bo` / `tilca-demo-2026`.
+
+Para probar una compra: abre un evento de pago, copia el código y toca "Comprar entrada". En el piloto, la compra se hace en una **ticketera de prueba** (no se cobra nada). Después, en el panel, "Confirmar ventas" muestra esa compra y se cierra el evento.
+
+## Cómo se usa Stellar
+
+Cada evento de pago tiene **su propia cuenta de escrow en Stellar Testnet**. TILCA la controla y su llave privada se guarda cifrada en el servidor.
+
+1. **Depósito.** Al publicar, el organizador deposita la comisión esperada (`ventas esperadas × precio × 5%`). Esa transacción crea la cuenta del escrow.
+2. **Liberación del 5%.** Al cerrar el evento, el escrow paga a la cuenta de TILCA `entradas confirmadas × precio × 5%`.
+3. **Devolución y cierre.** En otra transacción, el escrow devuelve el resto al organizador y se cierra (`accountMerge`).
+
+El cierre lo hace el organizador desde el panel, no es automático. Si Stellar no responde, el evento queda "pendiente de cobro" y se puede reintentar sin pagar dos veces. Los montos se representan 1 Bs = 1 XLM de prueba, así las cifras de Stellar Expert coinciden con las del panel.
+
+Comprobantes de un cierre real ("El último tren", 3 entradas × Bs 45):
+
+- Depósito Bs 22,50: https://stellar.expert/explorer/testnet/tx/48a3186235a52239762db3e77ebebff8987d98833ce9ffe3061fcf4eccf4dc29
+- Comisión del 5% a TILCA, Bs 6,75: https://stellar.expert/explorer/testnet/tx/d61f82549e667d2689468aa7a15b75b2ea5768ef798f90f36f13335cff577c2d
+- Devolución al organizador, Bs 15,75, y cierre de la cuenta: https://stellar.expert/explorer/testnet/tx/da38f1d372bccf78a6362479abc776f6be37d8c590c742b293f6a947c6f4a53e
+
+> El escrow lo custodia TILCA; no es un contrato inteligente. Integrar un escrow sin custodia, como Trustless Work, reemplazaría solo `lib/stellar/escrow.ts`.
 
 ## Cómo funciona
 
@@ -31,11 +62,12 @@ npm install
 npx supabase start            # Supabase local; aplica supabase/migrations
 cp .env.example .env.local    # completa las variables (ver abajo)
 npm run seed                  # datos de ejemplo
-npm run migrate:stellar       # cuentas de Stellar Testnet para los organizadores
+npm run migrate:stellar       # cuenta de TILCA y de los organizadores en Stellar Testnet
+npm run seed:jurado           # depósitos y un cierre reales en Testnet para el modo jurado
 npm run dev                   # http://localhost:3000
 ```
 
-Cuenta de organizador de ejemplo: `demo@tilca.bo` / `tilca-demo-2026`. Solo existe donde se corre `npm run seed`; no lo corras contra la base de producción.
+Cuenta de organizador de ejemplo: `demo@tilca.bo` / `tilca-demo-2026`. Solo existe donde se corre `npm run seed`. Córrelo en una base de demo, nunca en una con datos reales: borra y recrea los datos de ejemplo.
 
 ## Configuración
 
@@ -47,12 +79,13 @@ Las variables van en `.env.local` (local) o en el proyecto de Vercel. `.env.exam
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Clave pública de Supabase. |
 | `SUPABASE_SECRET_KEY` | Clave secreta (service role). Solo servidor y scripts. |
 | `NEXT_PUBLIC_SITE_URL` | URL pública del sitio (links de compartir y OAuth). |
-| `NEXT_PUBLIC_ENABLE_SIMULATOR` | `true` muestra el simulador de actividad en el panel. Desactivar en producción. |
+| `NEXT_PUBLIC_ENABLE_SIMULATOR` | `true` activa el simulador del panel y la ticketera de prueba (el botón "Comprar" lleva a ella). Solo para demos. |
 | `STELLAR_HORIZON_URL` | Servidor Horizon (por defecto, Testnet). |
 | `NEXT_PUBLIC_STELLAR_PLATFORM_PUBLIC_KEY` | Cuenta de TILCA que recibe las comisiones. |
 | `STELLAR_PLATFORM_SECRET` | Llave privada de esa cuenta. |
 | `STELLAR_ENCRYPTION_KEY` | Cifra las llaves de los organizadores y de los escrows. Generar con `openssl rand -hex 32`. |
 | `IMPORT_OWNER_EMAIL` | Cuenta que revisa los eventos importados. |
+| `JURY_EMAIL`, `JURY_PASSWORD` | Cuenta del modo jurado (opcional; por defecto, la de ejemplo). |
 | `NEXT_PUBLIC_MAP_TILE_URL`, `NEXT_PUBLIC_MAP_TILE_ATTRIBUTION` | Proveedor de tiles alternativo (opcional). |
 
 Ninguna llave real debe subirse al repositorio.
@@ -65,6 +98,7 @@ Ninguna llave real debe subirse al repositorio.
 | `npm run build` / `npm start` | Build y servidor de producción. |
 | `npm run lint` / `npm run typecheck` | ESLint y TypeScript. |
 | `npm run seed` | Carga los datos de ejemplo (reemplaza los anteriores). |
+| `npm run seed:jurado` | Después de `seed`: hace depósitos y un cierre reales en Testnet para que el modo jurado tenga comprobantes. |
 | `npm run migrate:stellar` | Crea y fondea en Testnet la cuenta de TILCA y las de los organizadores que no la tengan (si no, se crean con el primer depósito). |
 | `npm run import:superticket` | Importa eventos de Superticket. `-- --dry` muestra el resultado sin guardar. |
 
@@ -101,4 +135,4 @@ supabase/migrations/ esquema, políticas RLS y funciones
 - La curva de referencia de ventas ("eventos parecidos") es fija hasta tener datos históricos.
 - Las coordenadas de los lugares de ejemplo son aproximadas.
 - En los eventos importados de Superticket solo se miden vistas y clics: no tienen código ni cobro. Todotix bloquea la lectura automatizada y no se importa.
-- Los códigos `TILCA-XXXX` del modelo anterior (uno por clic, canjeados en puerta) se conservan en la base, pero ya no se generan ni se cuentan.
+- Los datos del primer prototipo (un código por cada clic) se conservan en la base, pero ya no se generan ni se cuentan.
