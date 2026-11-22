@@ -71,7 +71,7 @@ Esto es un plan; nada de esta sección está implementado todavía.
 | Nahomi | CTO | Diseño y continuidad técnica del software: mantenimiento y evolución de la plataforma. |
 | Fabián Tejerina | Finanzas | Modelo de negocio. |
 
-Origen del código: el MVP se prototipó antes en local y este repositorio se creó el 21/11 para la entrega.
+Origen del código: el código se escribió durante la hackathon; el repositorio se creó el 21/11 para la entrega.
 
 ## Cómo funciona
 
