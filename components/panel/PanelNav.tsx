@@ -34,7 +34,7 @@ const ITEMS = [
   },
   {
     href: "/panel/perfil",
-    label: "Perfil de la compañía",
+    label: "Mi perfil",
     match: (p: string) => p.startsWith("/panel/perfil"),
     icon: (
       <>

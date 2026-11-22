@@ -59,6 +59,7 @@ export interface TilcaEvent {
   created_at: string;
   organizers?: {
     name: string;
+    slug?: string;
     stellar_public_key?: string | null;
   } | null;
 }
@@ -74,8 +75,8 @@ export type PublicEvent = TilcaEvent & {
 
 /** Columnas públicas base (compatibles con cualquier versión del esquema) */
 export const EVENT_COLUMNS =
-  "id, organizer_id, title, category, subcategory, status, starts_at, ends_at, duration_min, venue_name, venue_address, venue_zone, lat, lng, price, presale_price, presale_until, capacity, tickets_sold, description, poster_url, ticket_url, trailer_url, published_at, discount_code, discount_amount, discount_unit, sales_channels, expected_sales, is_sample, source, created_at, organizers(name)";
+  "id, organizer_id, title, category, subcategory, status, starts_at, ends_at, duration_min, venue_name, venue_address, venue_zone, lat, lng, price, presale_price, presale_until, capacity, tickets_sold, description, poster_url, ticket_url, trailer_url, published_at, discount_code, discount_amount, discount_unit, sales_channels, expected_sales, is_sample, source, created_at, organizers(name, slug)";
 
 /** Columnas completas con integración de Stellar Escrow para el panel */
 export const EVENT_PANEL_COLUMNS =
-  "id, organizer_id, title, category, subcategory, status, starts_at, ends_at, duration_min, venue_name, venue_address, venue_zone, lat, lng, price, presale_price, presale_until, capacity, tickets_sold, description, poster_url, ticket_url, trailer_url, published_at, discount_code, discount_amount, discount_unit, sales_channels, expected_sales, promo_budget_bs, escrow_status, escrow_balance_bs, escrow_account, commission_bs, refund_bs, escrow_error, closed_at, is_sample, source, created_at, organizers(name, stellar_public_key)";
+  "id, organizer_id, title, category, subcategory, status, starts_at, ends_at, duration_min, venue_name, venue_address, venue_zone, lat, lng, price, presale_price, presale_until, capacity, tickets_sold, description, poster_url, ticket_url, trailer_url, published_at, discount_code, discount_amount, discount_unit, sales_channels, expected_sales, promo_budget_bs, escrow_status, escrow_balance_bs, escrow_account, commission_bs, refund_bs, escrow_error, closed_at, is_sample, source, created_at, organizers(name, slug, stellar_public_key)";

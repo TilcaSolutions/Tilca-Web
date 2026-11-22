@@ -10,6 +10,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { lpMidnight } from "../lib/time-filters";
 import { venueByName } from "../lib/venues";
+import { SAMPLE_PROFILES } from "./seed-profiles";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -183,7 +184,7 @@ const EVENTS: SeedEvent[] = [
   },
   {
     key: "micro",
-    organizer: "Risa Paceña",
+    organizer: "Micro Abierto LPZ",
     title: "Micro abierto de stand up",
     category: "standup",
     venue: "Equinoccio",
@@ -193,6 +194,20 @@ const EVENTS: SeedEvent[] = [
     price: 0,
     saves: 9,
     description: "Cualquiera puede subir: cinco minutos por persona. Inscripción en la puerta desde las 20:30.",
+  },
+  {
+    key: "micro-pasado",
+    organizer: "Micro Abierto LPZ",
+    title: "Micro abierto: noche de aniversario",
+    category: "standup",
+    venue: "Equinoccio",
+    day: -6,
+    time: "21:00",
+    duration: 120,
+    price: 0,
+    saves: 14,
+    publishedDaysAgo: 20,
+    description: "Dos años de micrófono abierto, con invitados sorpresa.",
   },
   {
     key: "cholets",
@@ -544,6 +559,28 @@ async function main() {
       .single();
     if (error) throw new Error(`${e.title}: ${error.message}`);
     eventIds.set(e.key, data.id);
+  }
+
+  console.log("Creando perfiles públicos de ejemplo…");
+  for (const [name, profile] of Object.entries(SAMPLE_PROFILES)) {
+    const orgId = orgIds.get(name);
+    if (!orgId) continue;
+    // Si otro organizador sin dueño ni eventos (restos de seeds anteriores) tiene el slug, se lo cede.
+    const { data: holder } = await db.from("organizers").select("id, owner_id").eq("slug", profile.slug).neq("id", orgId).maybeSingle();
+    if (holder) {
+      const { count } = await db.from("events").select("id", { count: "exact", head: true }).eq("organizer_id", holder.id);
+      if (holder.owner_id || count) {
+        console.log(`  ${profile.slug} ya lo usa otro organizador; ${name} queda con su slug automático.`);
+      } else {
+        await db.from("organizers").update({ slug: `${profile.slug}-anterior-${holder.id.slice(0, 6)}` }).eq("id", holder.id);
+      }
+    }
+    await db.from("organizers").update({ slug: profile.slug }).eq("id", orgId);
+    for (const table of ["organizer_profiles", "organizer_profile_drafts"]) {
+      const { error } = await db.from(table).upsert({ organizer_id: orgId, config: profile.config });
+      if (error) throw new Error(`${table}: ${error.message}`);
+    }
+    console.log(`  /o/${profile.slug}`);
   }
 
   console.log("Creando vistas, clics y ventas confirmadas…");

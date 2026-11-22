@@ -150,7 +150,14 @@ export default async function EventPage({ params, searchParams }: PageProps<"/ev
               <h1 className="font-condensed m-0 text-[28px] leading-[0.98] font-extrabold tracking-[-0.5px] sm:text-[38px] text-ink">
                 {event.title}
               </h1>
-              {organizer && <span className="text-[15px] font-medium text-ink-2">{organizer}</span>}
+              {organizer &&
+                (event.organizers?.slug && !event.source ? (
+                  <Link href={`/o/${event.organizers.slug}`} className="link-underline self-start text-[15px] font-medium text-ink-2 hover:text-ink">
+                    {organizer}
+                  </Link>
+                ) : (
+                  <span className="text-[15px] font-medium text-ink-2">{organizer}</span>
+                ))}
               {event.is_sample && (
                 <span className="self-start rounded bg-fog px-2 py-0.5 text-[12px] font-medium text-ink-3">
                   Evento de ejemplo

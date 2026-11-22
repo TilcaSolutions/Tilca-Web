@@ -414,3 +414,217 @@
 .leaflet-control-attribution {
   font-size: 10px;
 }
+
+/* ---------------------------------------------------------------------------
+   Perfil del organizador: animaciones de entrada (components/profile/IntroAnimation)
+   Duran 2 s; los últimos 300 ms se desvanecen. Con prefers-reduced-motion no se montan.
+   --------------------------------------------------------------------------- */
+@keyframes intro-out {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Telón que se abre */
+.intro-telon {
+  animation: intro-out 2s forwards;
+}
+.intro-half {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 51%;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.45)),
+    repeating-linear-gradient(90deg, #5c0d17 0 26px, #8a1725 26px 40px, #4a0a12 40px 64px);
+  box-shadow: inset -18px 0 30px rgba(0, 0, 0, 0.45);
+  animation-duration: 1.4s;
+  animation-delay: 0.3s;
+  animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+  animation-fill-mode: forwards;
+}
+.intro-half-l {
+  left: 0;
+  transform-origin: left top;
+  animation-name: intro-telon-l;
+}
+.intro-half-r {
+  right: 0;
+  transform-origin: right top;
+  box-shadow: inset 18px 0 30px rgba(0, 0, 0, 0.45);
+  animation-name: intro-telon-r;
+}
+@keyframes intro-telon-l {
+  to {
+    transform: translateX(-92%) scaleX(0.45) skewY(-2deg);
+  }
+}
+@keyframes intro-telon-r {
+  to {
+    transform: translateX(92%) scaleX(0.45) skewY(2deg);
+  }
+}
+.intro-valance {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 13%;
+  background:
+    radial-gradient(circle at 50% 100%, #b8862b 0 8px, transparent 9px) 0 100% / 34px 18px repeat-x,
+    linear-gradient(180deg, #6a0f1a, #8a1725 80%, #e0b44c 80% 86%, #8a1725 86%);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  animation: intro-valance 2s forwards;
+}
+@keyframes intro-valance {
+  0%,
+  70% {
+    transform: none;
+  }
+  100% {
+    transform: translateY(-110%);
+  }
+}
+
+/* Afiche que se despega de la pared */
+.intro-afiche {
+  background: #d8d2c6 radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px) 0 0 / 6px 6px;
+  perspective: 900px;
+  animation: intro-out 2s forwards;
+}
+.intro-poster {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(62%, 260px);
+  aspect-ratio: 3 / 4;
+  margin: calc(min(62%, 260px) * -0.665) 0 0 calc(min(62%, 260px) * -0.5);
+  display: flex;
+  align-items: flex-end;
+  padding: 18px;
+  background: var(--intro-accent);
+  color: var(--intro-ink);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+  transform-origin: 0 0;
+  animation: intro-peel 1.6s 0.35s cubic-bezier(0.55, 0, 0.6, 1) forwards;
+}
+.intro-poster-name {
+  font-family: var(--intro-font);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 0.95;
+}
+.intro-pin {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f6c200;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+}
+@keyframes intro-peel {
+  0% {
+    transform: none;
+  }
+  30% {
+    transform: rotateX(-8deg) rotateY(14deg) rotateZ(-3deg);
+    box-shadow: 18px 24px 30px rgba(0, 0, 0, 0.35);
+  }
+  100% {
+    transform: translate(-40%, 140%) rotateX(-30deg) rotateY(40deg) rotateZ(-28deg);
+    opacity: 0;
+  }
+}
+
+/* Luces de escenario que se encienden */
+.intro-luces {
+  background: #050507;
+  animation: intro-luces-bg 2s forwards;
+}
+@keyframes intro-luces-bg {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.intro-spot {
+  position: absolute;
+  top: -5%;
+  width: 46%;
+  height: 115%;
+  transform: translateX(-50%);
+  clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%);
+  background: radial-gradient(ellipse 60% 55% at 50% 100%, rgba(255, 238, 196, 0.85), rgba(255, 238, 196, 0.25) 60%, transparent 75%);
+  opacity: 0;
+  animation: intro-spot-on 0.35s forwards;
+}
+@keyframes intro-spot-on {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.intro-stage-name {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  transform: translateX(-50%);
+  width: 90%;
+  text-align: center;
+  font-family: var(--intro-font);
+  font-size: clamp(30px, 7vw, 64px);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 24px var(--intro-accent);
+  opacity: 0;
+  animation: intro-spot-on 0.4s 1s forwards;
+}
+
+/* Confeti */
+.intro-confeti {
+  animation: intro-out 2s forwards;
+}
+.intro-confetti {
+  position: absolute;
+  top: -8%;
+  border-radius: 2px;
+  animation-name: intro-fall;
+  animation-timing-function: cubic-bezier(0.3, 0.6, 0.6, 1);
+  animation-fill-mode: forwards;
+}
+@keyframes intro-fall {
+  to {
+    top: 108%;
+    transform: translateX(30px) rotate(var(--spin));
+  }
+}
+
+/* Video propio del organizador */
+.intro-video {
+  background: #000;
+  animation: intro-video-out 3.6s forwards;
+}
+@keyframes intro-video-out {
+  0%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
