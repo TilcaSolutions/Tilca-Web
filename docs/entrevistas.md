@@ -1,6 +1,6 @@
 # Validación con organizadores
 
-Hicimos **17 entrevistas** a organizadores y artistas que gestionan sus propios eventos: **14 del segmento objetivo** (organizadores independientes de eventos culturales en La Paz; dos de ellas son de la misma productora y cuentan como una sola perspectiva) y **3 fuera del segmento**, solo como comparación.
+Hicimos **20 entrevistas** a organizadores y artistas que gestionan sus propios eventos. Aquí están las **17 ya transcritas y analizadas**; las otras 3 se agregarán cuando se transcriban. De esas 17: **14 del segmento objetivo** (organizadores independientes de eventos culturales en La Paz; dos de ellas son de la misma productora y cuentan como una sola perspectiva) y **3 fuera del segmento**, solo como comparación.
 
 **Método.** Las entrevistas se grabaron y se transcribieron de forma literal con Whisper large-v3. Después se analizaron con codificación abierta (548 fragmentos con citas literales y marca de tiempo), codificación axial y un affinity map. Un script comprobó que cada cita del análisis aparece literal en su transcripción. Por privacidad, aquí no van nombres de personas ni de sus organizaciones.
 
