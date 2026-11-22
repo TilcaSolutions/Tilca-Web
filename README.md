@@ -13,7 +13,8 @@ Ese 5% se cobra desde un escrow en **Stellar Testnet**, con un comprobante públ
 | Recorrido en Stellar | https://tilca.vercel.app/demo |
 | Comprobante real (comisión del 5%) | https://stellar.expert/explorer/testnet/tx/d61f82549e667d2689468aa7a15b75b2ea5768ef798f90f36f13335cff577c2d |
 | Encuesta (solo lectura) | https://docs.google.com/spreadsheets/d/1DlWNGwtfAx4mhm2YZJgWdZyKnp3NRUm-eXLfDvDHswY/edit?usp=sharing |
-| Deck | https://canva.link/ma2qe44txm9z8c9 |
+| Pitch Deck (Canva) | https://canva.link/ma2qe44txm9z8c9 |
+| Pitch Deck (PDF en Drive) | https://drive.google.com/file/d/1UP9zTsY8skHj1PLyAhx74z2tCePJFMCv/view?usp=sharing |
 
 ## El problema
 
@@ -69,7 +70,6 @@ Esto es un plan; nada de esta sección está implementado todavía.
 | Alexander | CEO y technical founder | Desarrollo de la app, integración con Stellar y despliegue. |
 | Nicolás | Marketing y conexión | Conexión con organizadores, espacios culturales y personas del sector; marketing. |
 | Nahomi | CTO | Diseño y continuidad técnica del software: mantenimiento y evolución de la plataforma. |
-| Fabián Tejerina | Finanzas | Modelo de negocio. |
 
 Origen del código: el código se escribió durante la hackathon; el repositorio se creó el 21/11 para la entrega.
 
